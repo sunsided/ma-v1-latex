@@ -144,7 +144,9 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 
 \section{Übersicht der Literatur}
 
-\cite{orb} beschreibt einen neuen binären Deskriptor genannt \acro{ORB}, der auf \acro{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \acro{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}.
+\cite{orb} beschreibt einen neuen binären Deskriptor genannt \acro{ORB}, der auf \acro{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \acro{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}. Unterstellt dabei, dass \acro{SURF} besser ist als \acro{SIFT}; liefert Quelle für \acro{SURF}.
+
+\cite{eliveindonesia} ist eine Präsentation zum Entwurf eines Nutzvieh-Klassifikationssystemes, das Ansätze zur Parallelisierung von \algo{SIFT} und \algo{SURF} anmerkt. Hierbei werden unter anderem Parallelisierungen der Algorithmen (\algo{Parallel SIFT} und \algo{Parallel SURF}) besprochen, sowie auf Mehrmaschinen-Verarbeitung der Bilder selbst angeht; Hintergrund ist, dass die Features selbst lokaler Natur sind, für die Auswertung also nicht unbedingt der gesamte Kontext des Bildes notwendig ist. Eine Einführung von Padding an den Bildrändern wird ebenfalls erwähnt.
 
 \section{Section B}
 
