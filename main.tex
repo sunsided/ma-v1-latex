@@ -146,9 +146,15 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 
 \section{Übersicht der Literatur}
 
-\cite{orb} beschreibt einen neuen binären Deskriptor genannt \acro{ORB}, der auf \acro{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \acro{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}. Unterstellt dabei, dass \acro{SURF} besser ist als \acro{SIFT}; liefert Quelle für \acro{SURF}.
+\cite{orb} beschreiben einen neuen binären Deskriptor genannt \algo{ORB}, der auf \algo{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \algo{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}. Unterstellt dabei, dass \algo{SURF} besser ist als \algo{SIFT}; liefert Quelle für \algo{SURF}.
 
 \cite{eliveindonesia} ist eine Präsentation zum Entwurf eines Nutz"-vieh-Klas"-si"-fi"-ka"-tions"-sys"-tems, das Ansätze zur Parallelisierung von \algo{SIFT} und \algo{SURF} anmerkt. Hierbei werden unter anderem Parallelisierungen der Algorithmen (\algo{Parallel SIFT} und \algo{Parallel SURF}) besprochen, sowie auf Mehrmaschinen-Verarbeitung der Bilder selbst angeht; Hintergrund ist, dass die Features selbst lokaler Natur sind, für die Auswertung also nicht unbedingt der gesamte Kontext des Bildes notwendig ist. Eine Einführung von Padding an den Bildrändern wird ebenfalls erwähnt.
+
+\cite{detmatchkeyproadPresi} vergleichen \algo{SIFT} mit \algo{Affine-SIFT} und anderen (Stichworte \algo{FLANN} und \algo{RANSAC} -- Hinweis: \algo{FLANN} ist auch als Functional Link Neural Network bekannt, meint hier jedoch Fast Linear Approximation of Nearest Neighbors) und weist darauf hin, dass \algo{SIFT} nur in vier Parametern invariant ist: Zoom, Rotation, sowie X- und Y-Translation; affine Transformationen wie Perspektivenänderungen oder Rotation um eine geneigte Kameraachse sind dabei inbegriffen (d.h. gegenüber Kameratilts ist Standard-\algo{SIFT} nicht invariant).
+
+Hinweis auf den "`Curse of dimensionality"' (den "`Fluch der Dimensionalität"'), 
+siehe \url{https://en.wikipedia.org/wiki/Curse_of_dimensionality}, zur Begründung,
+weswegen Kd-Trees prinzipiell ungeeignet für das Indexieren von \algo{SIFT}-Features ist (diese sind sehr hochdimensional).
 
 \section{Section B}
 
