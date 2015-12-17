@@ -248,35 +248,65 @@ e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial 
 %
 Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
 
-Eine Approximation der Ableitung $\dfrac{\partial}{\partial x}$ ist der Rückwärtsdifferenzenquotient
-%
-\begin{align}
-\frac{\partial f}{\partial x} &\approx \frac{f(x) - f(x - \Delta x)}{\Delta x} \label{eq:differenceOperator}
-\end{align}
-%
-welcher unter der Annahme einer diskreten Schrittweite $\Delta x = 1$ über den folgenden Faltungskernel abgebildet werden kann:
-%
-\begin{align}
-\Delta f &= \begin{bmatrix}
- 1 & -1
- \end{bmatrix} \ast f \label{eq:len2diffKernel}
-\end{align}
-%
-Eine Anwendung des in \cref{eq:len2diffKernel} dargestellten Differenzenkernels ist in \cref{lst:len2diffKernel} zu finden.
-
-Aus der Kombination von Vorwärts- und Rückwärtsdifferenzenquotient (\cref{eq:differenceOperator}) um einen zentralen Wert $x$ ergibt sich der zentrale Differenzenquotient:
+Eine Approximation der Ableitung $\sfrac{\partial f}{\partial x}$ ist der zentrale Differenzenquotient
 %
 \begin{align}
 \frac{\partial f}{\partial x} &\approx \frac{f(x+\Delta x) - f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
 \end{align}
 %
-der sich, wie zuvor, als Faltungskernel um einen zentralen Wert darstellen lässt:
+der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung $(f \ast g)[k]$ von $f[k]$ mit der Funktion
+\begin{align}
+g[k] = 
+	\begin{cases}
+		-\frac{1}{2} & \text{wenn } k = +1 \\
+		+\frac{1}{2} & \text{wenn } k = -1 \\
+		0 & \text{sonst}
+	\end{cases} \label{eq:conv1DKernel}
+\end{align}
+%
+abbilden lässt.
+Die Überkreuzung der Vorzeichen im sog. Faltungskern erklärt sich über die Definition der diskreten Faltung:
 %
 \begin{align}
-\Delta f = \begin{bmatrix}
- 1 & 0 & -1
- \end{bmatrix} \ast f \label{eq:len3diffKernel}
+(f \ast g)[n] &= \sum_k f[k] \cdot g[n - k] \\
+              &= \sum_k f[n - k] \cdot g[k] \label{eq:diskFaltung}
 \end{align}
+
+Es zeigt sich, dass diese einer gewichteten Summenbildung der Funktion $f$ mit allen Gewichtswerten $g$ entspricht%
+\footnote{Der Umkehrung der Betrachtungsrichtung von $k$ zu $-k$ verdient die Faltung ihren Namen, analog einem gefalzten Blatt, dessen eine Hälfte auf die andere gefaltet wird.}.
+Die Variation in \cref{eq:diskFaltung} ergibt sich aus der Kommutativität der Faltungsoperation und ist oft besser geeignet, um Gewichtungen mit einer begrenzten Anzahl an Koeffizienten (z.B. einer finiten Impulsantwort) darzustellen%
+\footnote{Die Mächtigkeit der Menge der Gewichtungskoeffizienten $g$ ist im Allgemeinen geringer als die Mächtigkeit der Menge der zu gewichtenden Funktionswerte $f$; Ein FIR-Filter ist üblicherweise "`kürzer"' als das zu filternde Signal.}.
+
+\Cref{eq:comparisonConv1DWithCentralDiff} zeigt die Identität zwischen der Faltung einer Funktion $f[n]$ mit der in \cref{eq:conv1DKernel} dargestellten Funktion $g[n]$:
+%
+\begin{align}
+\label{eq:comparisonConv1DWithCentralDiff}
+\begin{split}
+(f \ast g)[n] &= \overbrace{f\left[n - \left(-1\right)\right] g[-1]}^{k = -1}
+              \,+\, \overbrace{f\left[n - 0\right] g[0]}^{k = 0}
+              \,+\, \overbrace{f\left[n - \left(+1\right)\right] g[+1]}^{k = +1} \\
+              &= f\left[n + 1\right] \cdot \left(+\frac{1}{2}\right) 
+              + f\left[n\right] \cdot (0) 
+              + f\left[n - 1\right] \cdot \left(-\frac{1}{2}\right) \\              
+              &= \frac{f\left[n + 1\right] - f\left[n - 1\right]}{2}
+\end{split}
+\end{align}
+
+Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller Form als $\vec f$ und $\mat G$ schreibt sich die Faltung generalisiert auf eine oder zwei Dimensionen als
+%
+\begin{align}
+(f \ast g)(n) = \mat G \ast \vec f
+\end{align}
+%
+Der in \cref{eq:conv1DKernel} beschriebene eindimensionale Faltungskern zur Berechnung des zentralen Differenzenquotienten zur diskreten Approximation des Differentialquotienten gemäß \cref{eq:centralDifferenceOperator} beschreibt sich so als
+%
+\begin{align}
+\mat G = \begin{bmatrix}
+ 1 & 0 & -1
+ \end{bmatrix} \label{eq:len3diffKernel}
+\end{align}
+%
+
 %
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
 \todo[inline]{Darstellung als Stems und Pixelwerte!}
