@@ -121,6 +121,7 @@
 \newcommand{\algo}[1]{\textit{#1}}
 \newcommand{\acro}[1]{\texttt{#1}}
 \newcommand{\imgfile}[1]{\texttt{#1}}
+\newcommand{\engl}[1]{engl.: \textit{#1}}
 
 % math commands
 \renewcommand{\vec}{\vectorsym}
@@ -254,7 +255,7 @@ Eine Approximation der Ableitung $\sfrac{\partial f}{\partial x}$ ist der zentra
 \frac{\partial f}{\partial x} &\approx \frac{f(x+\Delta x) - f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
 \end{align}
 %
-der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung $(f \ast g)[k]$ von $f[k]$ mit der Funktion
+der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung (\engl{convolution}) $(f \ast g)[k]$ von $f[k]$ mit der Funktion
 \begin{align}
 g[k] = 
 	\begin{cases}
@@ -275,7 +276,7 @@ Die Überkreuzung der Vorzeichen im sog. Faltungskern erklärt sich über die De
 Es zeigt sich, dass diese einer gewichteten Summenbildung der Funktion $f$ mit allen Gewichtswerten $g$ entspricht%
 \footnote{Der Umkehrung der Betrachtungsrichtung von $k$ zu $-k$ verdient die Faltung ihren Namen, analog einem gefalzten Blatt, dessen eine Hälfte auf die andere gefaltet wird.}.
 Die Variation in \cref{eq:diskFaltung} ergibt sich aus der Kommutativität der Faltungsoperation und ist oft besser geeignet, um Gewichtungen mit einer begrenzten Anzahl an Koeffizienten (z.B. einer finiten Impulsantwort) darzustellen%
-\footnote{Die Mächtigkeit der Menge der Gewichtungskoeffizienten $g$ ist im Allgemeinen geringer als die Mächtigkeit der Menge der zu gewichtenden Funktionswerte $f$; Ein FIR-Filter ist üblicherweise "`kürzer"' als das zu filternde Signal.}.
+\footnote{Die Mächtigkeit der Menge der Gewichtungskoeffizienten $g$ ist im Allgemeinen geringer als die Mächtigkeit der Menge der zu gewichtenden Funktionswerte $f$; ein FIR-Filter ist üblicherweise "`kürzer"' als das zu filternde Signal.}.
 
 \Cref{eq:comparisonConv1DWithCentralDiff} zeigt die Identität zwischen der Faltung einer Funktion $f[n]$ mit der in \cref{eq:conv1DKernel} dargestellten Funktion $g[n]$:
 %
@@ -301,75 +302,64 @@ Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller
 Der in \cref{eq:conv1DKernel} beschriebene eindimensionale Faltungskern zur Berechnung des zentralen Differenzenquotienten zur diskreten Approximation des Differentialquotienten gemäß \cref{eq:centralDifferenceOperator} beschreibt sich so als
 %
 \begin{align}
-\mat G = \begin{bmatrix}
+\mat G_{diff} = \begin{bmatrix}
  1 & 0 & -1
  \end{bmatrix} \label{eq:len3diffKernel}
 \end{align}
-%
 
+Da Differenzierungsverfahren auf abrupte Werteveränderungen entsprechend stark reagieren, sind sie anfällig gegenüber Störprozessen, die das Nutzsignal überlagern.
+Dieses generelle Problem der stochastischen%
+\footnote{Ist die Überlagerung eines Störprozesses exakt beschreib- und damit korrigierbar, handelt es sich nicht länger um ein stochastisches, sondern deterministisches Signal; in Folge der a priori-Kenntnis des Inhaltes erübrigt sich dann dessen Verarbeitung.}
+Signalverarbeitung kann durch ein Glätten des Signales gemindert werden:
+Hierbei wird die relative Veränderung eines Wertes zu seinen Nachbarwerten beschränkt, was die Amplitude des Rauschsignales auf Kosten der Amplitude des Nutzsignales mindert.
+Eine zugrunde liegende Annahme dürfte sein, dass sich natürlich vorkommende -- genereller: energetisch günstige -- Folgezustände nicht stark voneinander unterscheiden%
+\footnote{"`Natura non facit saltus"', Die Natur macht keine Sprünge; Carl von Linné.}, ein Wert also im Allgemeinen ähnlich zu seiner Umgebung ist.
+
+Einen einfachen, aber effektiven Glättungsprozess stellt dabei der (lokal) gewichtete Mittelwert dar, die die Intensität eines Wertes -- z.B. Pixels -- aus seiner Nachbarschaft ermittelt.
+Exemplarische, eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:len3meanKernel1D} (ein einfacher Mittelwert über die direkte Nachbarschaft), sowie \cref{eq:len3smoothKernel1D} (ein gewichteter Mittelwert über dieselbe Nachbarschaft) dar:
 %
+\begin{align}
+\mat G_{mean} = \begin{bmatrix}
+ 1 & 1 & 1
+ \end{bmatrix} \label{eq:len3meanKernel1D} \\
+\mat G_{smooth} = \begin{bmatrix}
+ 1 & 2 & 1
+ \end{bmatrix} \label{eq:len3smoothKernel1D}
+\end{align}
+
+In beiden Fällen kollidiert die Aufgabe der Differenzierung in Laufrichtung des Filters mit der Glättung in derselben Richtung, da beide Operationen gegenteilige Ziele verfolgen (Detektion, sowie Minderung von Sprüngen).
+
+Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation orthogonal zur Suchrichtung ausführt: Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
+Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich folglich aus der Überlagerung der Kerne $\mat G_{smooth}$ und $\mat G_{diff}$ als
+%
+\begin{align}
+\mat G_{x} &= 
+\begin{bmatrix}
+ 1 & 0 & -1 \\
+ 2 & 0 & -2 \\
+ 1 & 0 & -1
+ \end{bmatrix} = \mat G_{smooth}^T \cdot \mat G_{diff} \label{eq:sobel3x}
+\end{align}
+%
+analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
+%
+\begin{align}
+\mat G_{y} &= 
+\begin{bmatrix}
+ 1 & 2 &  1 \\
+ 0 & 0 & 0 \\
+ -1 & -2 & -1
+ \end{bmatrix} = \mat G_{diff}^T \cdot \mat G_{smooth} \label{eq:sobel3x}
+\end{align}
+
+Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge oft\todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten der abgebildeten Objekte, weswegen der Sobel-Operator als einfacher%
+\footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt werden wird.
+
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
 \todo[inline]{Darstellung als Stems und Pixelwerte!}
 \todo[inline]{Sinnvolle Begründung für zentralen Differenzenquotienten}
 \todo[inline]{Intuitive Erklärung für zentralen Differenzenquotienten}
 \todo[inline]{Sample und Plots für gefilterte Daten}
-
-\begin{lstlisting}[language=matlab,caption={Eindimensionale Faltung in MATLAB mit Kernel der Länge 2},label=lst:len2diffKernel]
->> sequence = [1 1 1 1 0 1 0 0 0 1 1 1];
->> kernel   = [1 -1];
->> conv(sequence, kernel)
-ans =
-     1  0  0  0 -1  1 -1  0  0  1  0  0 -1
-\end{lstlisting}
-
-\todo{1D-Filterkernel, Differenzoperator}
-
-Diese Form des Filters ist jedoch anfällig gegenüber Störungen (z.B. Sensorrauschen einer aufnehmenden Kamera, Klümpchenbildung der Silberhalogenide im Filmsubstrat, etc.), da diese fälschlicherweise als korrekte Intensitätssprünge gewertet werden.
-
-Es ist allerdings eine valide Annahme \todo{Zitat LION}, dass in nicht-synthetischen Bildern starke Intensitätssprünge zwischen zwei benachbarten Pixeln unwahrscheinlich sind -- "`Natura non facit saltus"': Die Natur macht keine Sprünge -- weswegen das Auftreten einer starken Intensitätsschwankung ebenfalls ein Indikator für überlagerndes Rauschen ist.
-
-Stochastisches Rauschen wird im Allgemeinen durch eine Glättungsoperation gemindert%
-\footnote{Wären die Rauschintensitäten exakt vorhersag- und damit korrigierbar, handelt es sich nicht länger um stochastisches, sondern deterministisches Rauschen. Nicht per se glättende Algorithmen wie eine struktur- und texturbasierte Korrektur einzelner statistisch auffälliger Bildintensitäten sind jedoch denkbar.}.
-Hierdurch steht jedoch das Detektieren von Sprüngen in Suchrichtung in direktem Widerspruch zur Korrektur des Rauschens in derselben Richtung.
-
-Um dem entgegenzuwirken erweitert der \algo{Sobel-Operator} das Konzept auf zwei Dimensionen in eine Faltungsmatrix (den Filterkernel) und führt die Glättung orthogonal zur Suchrichtung aus, wodurch die Differenzierung nicht länger von ihr beeinträchtigt wird.
-
-Hierbei wird die Differenzierung in (hier: horizontaler) Suchrichtung
-%
-\begin{align}
-\vec{g_x} &= \begin{bmatrix}
-	1 & 0 & -1
-	\end{bmatrix}
-\end{align}
-%
-mit einer Glättung in orthogonaler (hier: vertikaler) Richtung
-%
-\begin{align}
-\vec{g_y} &= \begin{bmatrix}
-	1 \\
-	2 \\
-	1
-	\end{bmatrix}
-\end{align}
-%
-überlagert, so dass sich der zweidimensionale Filterkernel des Sobel-Operators ergibt
-%
-\begin{align}
-\mat G &= \vec{g_y} \cdot \vec{g_x} = \begin{bmatrix}
-	1 & 0 & -1 \\
-	2 & 0 & -2 \\
-	1 & 0 & -1
-	\end{bmatrix}
-\end{align}
-%
-Da für die Glättung des aktuellen Intensitätswertes nur Werte in Betracht gezogen werden, die nicht 
-
-Hierbei wird parallel zur Differenzierung in Suchrichtung orthogonal zur Suchrichtung geglättet, um Bildrauschen entgegen zu wirken.
-
-Die Sobel-Operatoren $G_x$ und $G_y$
-
-Als diskrete Approximation der ersten Ableitung des Bildes kann der Sobel-Operator \todo{Quelle} verwendet werden
-
 
 \section{Übersicht der Literatur}
 
