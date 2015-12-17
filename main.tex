@@ -244,7 +244,7 @@ Ein wünschenswerter Zustand ist es, Bildteile stattdessen entsprechend ihrer Wi
 \cite{avidan2007seam} formulieren die "`Wichtigkeit"' eines Pixels als dessen Informationsgehalt, ausgedrückt über die Energie $e_1(\mat I)$ des Bildes $\mat I$:
 %
 \begin{align}
-e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial y} \mat I|
+e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial y} \mat I| \label{eq:seamEnergy1}
 \end{align}
 %
 Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
@@ -340,8 +340,8 @@ Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horiz
  1 & 0 & -1
  \end{bmatrix} = \mat G_{smooth}^T \cdot \mat G_{diff} \label{eq:sobel3x}
 \end{align}
-%
-analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
+
+Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
 %
 \begin{align}
 \mat G_{y} &= 
@@ -354,6 +354,14 @@ analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Ri
 
 Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge oft\todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten der abgebildeten Objekte, weswegen der Sobel-Operator als einfacher%
 \footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt werden wird.
+
+Analog \cref{eq:seamEnergy1} ergibt sich folglich das Energiebild
+%
+\begin{align}
+e_1(\mat I) &= |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \label{eq:sobelEnergy}
+\end{align}
+%
+als absolute Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
 
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
 \todo[inline]{Darstellung als Stems und Pixelwerte!}
