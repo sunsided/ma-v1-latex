@@ -201,11 +201,13 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 	\label{fig:vorverBild}
 \end{figure}
 
-Das in \cref{fig:vorverBild} gezeigte Quellbild weist eine Dimension von $\SI{1200}{\px} \times \SI{1450}{\px}$ auf, von denen das eigentliche Produktbild jedoch nur ca. $\SI{1009}{\px} \times \SI{514}{\px}$ in Anspruch nimmt.
+Das in \cref{fig:vorverBild} gezeigte Quellbild weist eine Dimension von $\SI{1200}{\px} \times \SI{1450}{\px}$ (Breite $\times$ Höhe) auf, von denen das eigentliche Produktbild jedoch nur ca. $\SI{1009}{\px} \times \SI{514}{\px}$ in Anspruch nimmt.
 
-Würde dieses Bild nun zur Reduktion von Speichergröße und weiteren Verarbeitungszeiten auf eine maximale Kantenlänge von \SI{512}{\px} heruntergerechnet werden --- dies entspräche $\SI{424}{\px} \times \SI{512}{\px}$ --- so würde das eigentliche Produktbild im resultierenden Format nur noch $\SI{357}{\px} \times \SI{181}{\px}$ beanspruchen.
+Würde dieses Bild nun zwecks Verringerung des Speicherbedarfs und der weiteren Verarbeitungszeiten auf eine maximale Kantenlänge von z.B. \SI{512}{\px} heruntergerechnet werden --- dies entspräche $\SI{424}{\px} \times \SI{512}{\px}$ --- so würde das eigentliche Produktbild im resultierenden Format nur noch $\SI{357}{\px} \times \SI{181}{\px}$ beanspruchen.
 
-Durch ein zuvoriges Beschneiden des Bildes auf den relevanten Bildbereich -- eine Definition des Begriffes "`relevant"' steht hierbei noch aus -- ergäbe sich indes ein Bereich von $\SI{512}{\px} \times \SI{261}{\px}$ für bildwichtige Inhalte.
+Durch ein zuvoriges Beschneiden des Bildes auf den relevanten Bildbereich 
+-- eine genaue Definition des Begriffes "`relevant"' steht hierbei noch aus -- 
+ergäbe sich indes ein Bereich von $\SI{512}{\px} \times \SI{261}{\px}$ für bildwichtige Inhalte.
 Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung der nutzbaren Datenmenge gegenüber den naiven Ansatz. \Cref{tab:vorverDimensionen} verdeutlicht die Dimensionen und prozentualen Unterschiede.
 
 \begin{table}
@@ -227,6 +229,117 @@ Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung de
 	\caption*{$G_0, P_0$: Bereich des Gesamtbildes $G$ und Produktbildes $P$ in den ursprünglichen Dimensionen; $G_1, P_1$: Bereiche nach Verkleinerung der längsten Kante des Bildes $G$ auf \SI{512}{px}; $G_2, P_2$: Bereiche nach Entfernung der bildunwichtigen Randteile in $G$, gefolgt von Reduktion der längsten Kante auf \SI{512}{\px}.}
 	\label{tab:vorverDimensionen}
 \end{table}
+
+\subsubsection{Energiebasiertes Retargeting}
+
+Bildretargeting befasst sich mit der Aufgabe, ein Bild fester Dimension auf Zielen mit vom Bild unterschiedlicher oder generell variabler Dimension darzustellen, wie es etwa im Rahmen von responsive designs von Webseiten \todo{erklären} oder bei Smartphones beim Wechsel von vertikaler Lage ("`portrait mode"') zu horizontaler Lage ("`landscape mode"') notwendig wird.
+%
+Ein prominentes, aber nicht mehr all zu oft auftretendes Beispiel für dieses Problem ist die Darstellung von 4:3-Filmformaten auf einem Fernseher mit einem 16:9- oder 16:10-Bildverhältnis, wobei man sich zwischen vollem Bild, aber reduzierter Bildhöhe ("`letterbox"') oder voller Ausnutzung der Höhe der Anzeigefläche, aber fehlenden Bildrändern ("`Pan \& Scan"') entscheiden muss.
+
+Während man einen Text dynamisch entsprechend des zur Darstellung verfügbaren Platzes umbrechen kann, ist dies bei Bildern nicht möglich.
+Übliche Optionen in diesen Fällen sind das Beschneiden des Bildes auf die Dimensionen der Anzeigefläche (crop), das Skalieren des Bildes in den neuen Anzeigebereich unter Beachtung des Aspektverhältnisses (zoom, scale to fit), sowie das Skalieren des Bildes ohne Beachtung des Aspektverhältnisses (stretching), wobei jede dieser Optionen ihre eigenen Vor- und Nachteile mit sich bringt.
+
+Ein wünschenswerter Zustand ist es, Bildteile stattdessen entsprechend ihrer Wichtigkeit zu behalten oder zu verwerfen. 
+\cite{avidan2007seam} formulieren die "`Wichtigkeit"' eines Pixels als dessen Informationsgehalt, ausgedrückt über die Energie $e_1(\mat I)$ des Bildes $\mat I$:
+%
+\begin{align}
+e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial y} \mat I|
+\end{align}
+%
+Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
+
+Eine Approximation der Ableitung $\dfrac{\partial}{\partial x}$ ist der Rückwärtsdifferenzenquotient
+%
+\begin{align}
+\frac{\partial f}{\partial x} &\approx \frac{f(x) - f(x - \Delta x)}{\Delta x} \label{eq:differenceOperator}
+\end{align}
+%
+welcher unter der Annahme einer diskreten Schrittweite $\Delta x = 1$ über den folgenden Faltungskernel abgebildet werden kann:
+%
+\begin{align}
+\Delta f &= \begin{bmatrix}
+ 1 & -1
+ \end{bmatrix} \ast f \label{eq:len2diffKernel}
+\end{align}
+%
+Eine Anwendung des in \cref{eq:len2diffKernel} dargestellten Differenzenkernels ist in \cref{lst:len2diffKernel} zu finden.
+
+Aus der Kombination von Vorwärts- und Rückwärtsdifferenzenquotient (\cref{eq:differenceOperator}) um einen zentralen Wert $x$ ergibt sich der zentrale Differenzenquotient:
+%
+\begin{align}
+\frac{\partial f}{\partial x} &\approx \frac{f(x+\Delta x) - f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
+\end{align}
+%
+der sich, wie zuvor, als Faltungskernel um einen zentralen Wert darstellen lässt:
+%
+\begin{align}
+\Delta f = \begin{bmatrix}
+ 1 & 0 & -1
+ \end{bmatrix} \ast f \label{eq:len3diffKernel}
+\end{align}
+%
+\todo[inline]{Stellt Kanten mit doppelter Breite dar}
+\todo[inline]{Darstellung als Stems und Pixelwerte!}
+\todo[inline]{Sinnvolle Begründung für zentralen Differenzenquotienten}
+\todo[inline]{Intuitive Erklärung für zentralen Differenzenquotienten}
+\todo[inline]{Sample und Plots für gefilterte Daten}
+
+\begin{lstlisting}[language=matlab,caption={Eindimensionale Faltung in MATLAB mit Kernel der Länge 2},label=lst:len2diffKernel]
+>> sequence = [1 1 1 1 0 1 0 0 0 1 1 1];
+>> kernel   = [1 -1];
+>> conv(sequence, kernel)
+ans =
+     1  0  0  0 -1  1 -1  0  0  1  0  0 -1
+\end{lstlisting}
+
+\todo{1D-Filterkernel, Differenzoperator}
+
+Diese Form des Filters ist jedoch anfällig gegenüber Störungen (z.B. Sensorrauschen einer aufnehmenden Kamera, Klümpchenbildung der Silberhalogenide im Filmsubstrat, etc.), da diese fälschlicherweise als korrekte Intensitätssprünge gewertet werden.
+
+Es ist allerdings eine valide Annahme \todo{Zitat LION}, dass in nicht-synthetischen Bildern starke Intensitätssprünge zwischen zwei benachbarten Pixeln unwahrscheinlich sind -- "`Natura non facit saltus"': Die Natur macht keine Sprünge -- weswegen das Auftreten einer starken Intensitätsschwankung ebenfalls ein Indikator für überlagerndes Rauschen ist.
+
+Stochastisches Rauschen wird im Allgemeinen durch eine Glättungsoperation gemindert%
+\footnote{Wären die Rauschintensitäten exakt vorhersag- und damit korrigierbar, handelt es sich nicht länger um stochastisches, sondern deterministisches Rauschen. Nicht per se glättende Algorithmen wie eine struktur- und texturbasierte Korrektur einzelner statistisch auffälliger Bildintensitäten sind jedoch denkbar.}.
+Hierdurch steht jedoch das Detektieren von Sprüngen in Suchrichtung in direktem Widerspruch zur Korrektur des Rauschens in derselben Richtung.
+
+Um dem entgegenzuwirken erweitert der \algo{Sobel-Operator} das Konzept auf zwei Dimensionen in eine Faltungsmatrix (den Filterkernel) und führt die Glättung orthogonal zur Suchrichtung aus, wodurch die Differenzierung nicht länger von ihr beeinträchtigt wird.
+
+Hierbei wird die Differenzierung in (hier: horizontaler) Suchrichtung
+%
+\begin{align}
+\vec{g_x} &= \begin{bmatrix}
+	1 & 0 & -1
+	\end{bmatrix}
+\end{align}
+%
+mit einer Glättung in orthogonaler (hier: vertikaler) Richtung
+%
+\begin{align}
+\vec{g_y} &= \begin{bmatrix}
+	1 \\
+	2 \\
+	1
+	\end{bmatrix}
+\end{align}
+%
+überlagert, so dass sich der zweidimensionale Filterkernel des Sobel-Operators ergibt
+%
+\begin{align}
+\mat G &= \vec{g_y} \cdot \vec{g_x} = \begin{bmatrix}
+	1 & 0 & -1 \\
+	2 & 0 & -2 \\
+	1 & 0 & -1
+	\end{bmatrix}
+\end{align}
+%
+Da für die Glättung des aktuellen Intensitätswertes nur Werte in Betracht gezogen werden, die nicht 
+
+Hierbei wird parallel zur Differenzierung in Suchrichtung orthogonal zur Suchrichtung geglättet, um Bildrauschen entgegen zu wirken.
+
+Die Sobel-Operatoren $G_x$ und $G_y$
+
+Als diskrete Approximation der ersten Ableitung des Bildes kann der Sobel-Operator \todo{Quelle} verwendet werden
+
 
 \section{Übersicht der Literatur}
 
