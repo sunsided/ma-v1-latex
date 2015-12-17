@@ -293,16 +293,16 @@ Die Variation in \cref{eq:diskFaltung} ergibt sich aus der Kommutativität der F
 \end{split}
 \end{align}
 
-Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller Form als $\vec f$ und $\mat G$ schreibt sich die Faltung generalisiert auf eine oder zwei Dimensionen als
+Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller Form als $\vec f$ und $\mat g$ schreibt sich die Faltung generalisiert auf eine oder zwei Dimensionen als
 %
 \begin{align}
-(f \ast g)(n) = \mat G \ast \vec f
+(f \ast g)(n) = \mat f \ast \vec g
 \end{align}
 %
 Der in \cref{eq:conv1DKernel} beschriebene eindimensionale Faltungskern zur Berechnung des zentralen Differenzenquotienten zur diskreten Approximation des Differentialquotienten gemäß \cref{eq:centralDifferenceOperator} beschreibt sich so als
 %
 \begin{align}
-\mat G_{diff} = \begin{bmatrix}
+\mat g_{diff} = \begin{bmatrix}
  1 & 0 & -1
  \end{bmatrix} \label{eq:len3diffKernel}
 \end{align}
@@ -311,26 +311,26 @@ Da Differenzierungsverfahren auf abrupte Werteveränderungen entsprechend stark 
 Dieses generelle Problem der stochastischen%
 \footnote{Ist die Überlagerung eines Störprozesses exakt beschreib- und damit korrigierbar, handelt es sich nicht länger um ein stochastisches, sondern deterministisches Signal; in Folge der a priori-Kenntnis des Inhaltes erübrigt sich dann dessen Verarbeitung.}
 Signalverarbeitung kann durch ein Glätten des Signales gemindert werden:
-Hierbei wird die relative Veränderung eines Wertes zu seinen Nachbarwerten beschränkt, was die Amplitude des Rauschsignales auf Kosten der Amplitude des Nutzsignales mindert.
-Eine zugrunde liegende Annahme dürfte sein, dass sich natürlich vorkommende -- genereller: energetisch günstige -- Folgezustände nicht stark voneinander unterscheiden%
+Hierbei wird die relative Veränderung eines Wertes zu seinen Nachbarwerten beschränkt, wodurch die Amplitude des Rauschsignales auf Kosten der Amplitude des Nutzsignales gemindert wird.
+Eine zugrunde liegende Annahme dürfte sein, dass natürlich vorkommende -- genereller: energetisch günstige -- Folgezustände nicht stark variieren%
 \footnote{"`Natura non facit saltus"', Die Natur macht keine Sprünge; Carl von Linné.}, ein Wert also im Allgemeinen ähnlich zu seiner Umgebung ist.
 
-Einen einfachen, aber effektiven Glättungsprozess stellt dabei der (lokal) gewichtete Mittelwert dar, die die Intensität eines Wertes -- z.B. Pixels -- aus seiner Nachbarschaft ermittelt.
-Exemplarische, eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:len3meanKernel1D} (ein einfacher Mittelwert über die direkte Nachbarschaft), sowie \cref{eq:len3smoothKernel1D} (ein gewichteter Mittelwert über dieselbe Nachbarschaft) dar:
+Einen einfachen, aber effektiven Glättungsprozess stellt dabei der (lokal) gewichtete Mittelwert dar, welcher die Intensität eines Wertes -- z.B. Pixels -- aus seiner Nachbarschaft ermittelt.
+Zwei eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:len3meanKernel1D} (ein einfacher Mittelwert über die direkte Nachbarschaft), sowie \cref{eq:len3smoothKernel1D} (ein gewichteter Mittelwert über dieselbe Nachbarschaft) dar:
 %
 \begin{align}
-\mat G_{mean} = \begin{bmatrix}
+\mat g_{mean} = \begin{bmatrix}
  1 & 1 & 1
  \end{bmatrix} \label{eq:len3meanKernel1D} \\
-\mat G_{smooth} = \begin{bmatrix}
+\mat g_{smooth} = \begin{bmatrix}
  1 & 2 & 1
  \end{bmatrix} \label{eq:len3smoothKernel1D}
 \end{align}
 
-In beiden Fällen kollidiert die Aufgabe der Differenzierung in Laufrichtung des Filters mit der Glättung in derselben Richtung, da beide Operationen gegenteilige Ziele verfolgen (Detektion, sowie Minderung von Sprüngen).
+In jedem Fall kollidiert jedoch die Aufgabe der Differenzierung in Laufrichtung des Filters mit der Glättung in derselben Richtung, da beide Operationen gegenteilige Ziele verfolgen (jener die Detektion, dieser die Minderung von Sprüngen).
 
-Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation orthogonal zur Suchrichtung ausführt: Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
-Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich folglich aus der Überlagerung der Kerne $\mat G_{smooth}$ und $\mat G_{diff}$ als
+Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation stattdessen orthogonal zur Suchrichtung ausführt: Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
+Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich folglich aus der Überlagerung der Kerne $\mat g_{smooth}$ und $\mat g_{diff}$ als
 %
 \begin{align}
 \mat G_{x} &= 
@@ -338,7 +338,7 @@ Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horiz
  1 & 0 & -1 \\
  2 & 0 & -2 \\
  1 & 0 & -1
- \end{bmatrix} = \mat G_{smooth}^T \cdot \mat G_{diff} \label{eq:sobel3x}
+ \end{bmatrix} = \mat g_{smooth}^T \cdot \mat g_{diff} \label{eq:sobel3x}
 \end{align}
 
 Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
@@ -349,19 +349,20 @@ Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Ri
  1 & 2 &  1 \\
  0 & 0 & 0 \\
  -1 & -2 & -1
- \end{bmatrix} = \mat G_{diff}^T \cdot \mat G_{smooth} \label{eq:sobel3x}
+ \end{bmatrix} = \mat g_{diff}^T \cdot \mat g_{smooth} \label{eq:sobel3x}
 \end{align}
 
-Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge oft\todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten der abgebildeten Objekte, weswegen der Sobel-Operator als einfacher%
-\footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt werden wird.
+Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge oft\todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
+\footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt wird.
 
-Analog \cref{eq:seamEnergy1} ergibt sich folglich das Energiebild
+Analog \cref{eq:seamEnergy1} ergibt sich nun das Energiebild des Bildes $\mat I$ als
 %
 \begin{align}
 e_1(\mat I) &= |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \label{eq:sobelEnergy}
 \end{align}
 %
-als absolute Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
+das heißt der absoluten Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
+Wie alle separierbaren 2D-Filterkerne -- also jene, die aus zwei unabhängigen, nacheinander ausgeführten, eindimensionalen Filteroperationen bestehen -- lässt sich dieser Algorithmus effizient mit verringertem Rechenaufwand implementieren.\todo{Kann man mal durchrechnen.}
 
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
 \todo[inline]{Darstellung als Stems und Pixelwerte!}
