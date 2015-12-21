@@ -126,6 +126,7 @@
 % math commands
 \renewcommand{\vec}{\vectorsym}
 \newcommand{\mat}{\matrixsym}
+\newcommand{\fun}{\mathit}
 \newcommand{\transp}{^{\mathstrut\scriptscriptstyle{\top}}}
 \DeclareMathOperator*{\argmin}{\arg\!\min}
 \newcommand{\thetavec}{\ensuremath{\vec{\theta}}}
@@ -231,7 +232,7 @@ Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung de
 	\label{tab:vorverDimensionen}
 \end{table}
 
-\subsubsection{Energiebasiertes Retargeting}
+\subsection{Energiebasiertes Retargeting mittels Sobel-Operator}
 
 Bildretargeting befasst sich mit der Aufgabe, ein Bild fester Dimension auf Zielen mit vom Bild unterschiedlicher oder generell variabler Dimension darzustellen, wie es etwa im Rahmen von responsive designs von Webseiten \todo{erklären} oder bei Smartphones beim Wechsel von vertikaler Lage ("`portrait mode"') zu horizontaler Lage ("`landscape mode"') notwendig wird.
 %
@@ -241,23 +242,25 @@ Während man einen Text dynamisch entsprechend des zur Darstellung verfügbaren 
 Übliche Optionen in diesen Fällen sind das Beschneiden des Bildes auf die Dimensionen der Anzeigefläche (crop), das Skalieren des Bildes in den neuen Anzeigebereich unter Beachtung des Aspektverhältnisses (zoom, scale to fit), sowie das Skalieren des Bildes ohne Beachtung des Aspektverhältnisses (stretching), wobei jede dieser Optionen ihre eigenen Vor- und Nachteile mit sich bringt.
 
 Ein wünschenswerter Zustand ist es, Bildteile stattdessen entsprechend ihrer Wichtigkeit zu behalten oder zu verwerfen. 
-\cite{avidan2007seam} formulieren die "`Wichtigkeit"' eines Pixels als dessen Informationsgehalt, ausgedrückt über die Energie $e_1(\mat I)$ des Bildes $\mat I$:
+\cite{avidan2007seam} formulieren die "`Wichtigkeit"' eines Pixels als dessen Informationsgehalt, ausgedrückt über die Energie $\fun e_1(\mat I)$ des Bildes $\mat I$:
 %
 \begin{align}
-e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial y} \mat I| \label{eq:seamEnergy1}
+\fun e_1(\mat I) &= |\frac{\partial}{\partial x} \mat I| + |\frac{\partial}{\partial y} \mat I| \label{eq:seamEnergy1}
 \end{align}
 %
 Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
 
-Eine Approximation der Ableitung $\sfrac{\partial f}{\partial x}$ ist der zentrale Differenzenquotient
+\subsubsection{Eindimensionale Faltung zur approximativen Differenzierung}
+
+Eine Approximation der Ableitung $\sfrac{\partial \fun f}{\partial x}$ ist der zentrale Differenzenquotient
 %
 \begin{align}
-\frac{\partial f}{\partial x} &\approx \frac{f(x+\Delta x) - f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
+\frac{\partial \fun f}{\partial x} &\approx \frac{\fun f(x+\Delta x) - \fun f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
 \end{align}
 %
-der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung (\engl{convolution}) $(f \ast g)[k]$ von $f[k]$ mit der Funktion
+der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung (\engl{convolution}) $(\fun f \ast \fun g)[k]$ von $\fun f[k]$ mit der Funktion
 \begin{align}
-g[k] = 
+\fun g[k] = 
 	\begin{cases}
 		-\frac{1}{2} & \text{wenn } k = +1 \\
 		+\frac{1}{2} & \text{wenn } k = -1 \\
@@ -269,8 +272,8 @@ abbilden lässt.
 Die Überkreuzung der Vorzeichen im sog. Faltungskern erklärt sich über die Definition der diskreten Faltung:
 %
 \begin{align}
-(f \ast g)[n] &= \sum_k f[k] \cdot g[n - k] \\
-              &= \sum_k f[n - k] \cdot g[k] \label{eq:diskFaltung}
+(\fun f \ast \fun g)[n] &= \sum_k \fun f[k] \cdot \fun g[n - k] \\
+              &= \sum_k \fun f[n - k] \cdot \fun g[k] \label{eq:diskFaltung}
 \end{align}
 
 Es zeigt sich, dass diese einer gewichteten Summenbildung der Funktion $f$ mit allen Gewichtswerten $g$ entspricht%
@@ -283,20 +286,21 @@ Die Variation in \cref{eq:diskFaltung} ergibt sich aus der Kommutativität der F
 \begin{align}
 \label{eq:comparisonConv1DWithCentralDiff}
 \begin{split}
-(f \ast g)[n] &= \overbrace{f\left[n - \left(-1\right)\right] g[-1]}^{k = -1}
-              \,+\, \overbrace{f\left[n - 0\right] g[0]}^{k = 0}
-              \,+\, \overbrace{f\left[n - \left(+1\right)\right] g[+1]}^{k = +1} \\
-              &= f\left[n + 1\right] \cdot \left(+\frac{1}{2}\right) 
-              + f\left[n\right] \cdot (0) 
-              + f\left[n - 1\right] \cdot \left(-\frac{1}{2}\right) \\              
-              &= \frac{f\left[n + 1\right] - f\left[n - 1\right]}{2}
+(\fun f \ast \fun g)[n]
+                &= \overbrace{\fun f\left[n - \left(-1\right)\right] g[-1]}^{k = -1}
+              \,+\, \overbrace{\fun f\left[n - 0\right] g[0]}^{k = 0}
+              \,+\, \overbrace{\fun f\left[n - \left(+1\right)\right] g[+1]}^{k = +1} \\
+              &= \fun f\left[n + 1\right] \cdot \left(+\frac{1}{2}\right) 
+              + \fun f\left[n\right] \cdot (0) 
+              + \fun f\left[n - 1\right] \cdot \left(-\frac{1}{2}\right) \\              
+              &= \frac{\fun f\left[n + 1\right] - \fun f\left[n - 1\right]}{2}
 \end{split}
 \end{align}
 
 Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller Form als $\vec f$ und $\mat g$ schreibt sich die Faltung generalisiert auf eine oder zwei Dimensionen als
 %
 \begin{align}
-(f \ast g)(n) = \mat f \ast \vec g
+(\fun f \ast \fun g)(n) = \mat f \ast \vec g
 \end{align}
 %
 Der in \cref{eq:conv1DKernel} beschriebene eindimensionale Faltungskern zur Berechnung des zentralen Differenzenquotienten zur diskreten Approximation des Differentialquotienten gemäß \cref{eq:centralDifferenceOperator} beschreibt sich so als
@@ -329,8 +333,20 @@ Zwei eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:le
 
 In jedem Fall kollidiert jedoch die Aufgabe der Differenzierung in Laufrichtung des Filters mit der Glättung in derselben Richtung, da beide Operationen gegenteilige Ziele verfolgen (jener die Detektion, dieser die Minderung von Sprüngen).
 
-Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation stattdessen orthogonal zur Suchrichtung ausführt: Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
-Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich folglich aus der Überlagerung der Kerne $\mat g_{smooth}$ und $\mat g_{diff}$ als
+\subsubsection{Sobel-Operator und zweidimensionale Faltung}
+
+Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation stattdessen orthogonal zur Suchrichtung ausführt.
+%Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
+%
+Dabei bedient er sich der zweidimensionalen diskreten Faltung
+%
+\begin{align}
+(\fun f \ast \fun g)[m, n] &= \sum_k \sum_l \fun f[k, l] \cdot \fun g[m - k, n - l] \label{eq:diskFaltung2D}
+\end{align}
+%
+welche einen zweidimensionalen Filterkern (eine Matrix) auf eine zweidimensionale Funktion (ebenfalls eine Matrix) anwendet.
+
+Der 2D-Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich nun aus der Überlagerung der Kerne $\mat g_{smooth}$ und $\mat g_{diff}$ mittels des dyadischen (bzw. Kronecker-)Produktes als
 %
 \begin{align}
 \mat G_{x} &= 
@@ -338,7 +354,7 @@ Der zweidimensionale Filterkern des Sobel-Operators zur Differenzierung in horiz
  1 & 0 & -1 \\
  2 & 0 & -2 \\
  1 & 0 & -1
- \end{bmatrix} = \mat g_{smooth}^T \cdot \mat g_{diff} \label{eq:sobel3x}
+ \end{bmatrix} = \mat g_{smooth}^T \otimes \mat g_{diff} \label{eq:sobel3x}
 \end{align}
 
 Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
@@ -349,20 +365,57 @@ Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Ri
  1 & 2 &  1 \\
  0 & 0 & 0 \\
  -1 & -2 & -1
- \end{bmatrix} = \mat g_{diff}^T \cdot \mat g_{smooth} \label{eq:sobel3x}
+ \end{bmatrix} = \mat g_{diff}^T \otimes \mat g_{smooth} \label{eq:sobel3y}
 \end{align}
 
-Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge oft\todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
+Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge üblicherweise \todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
 \footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt wird.
 
 Analog \cref{eq:seamEnergy1} ergibt sich nun das Energiebild des Bildes $\mat I$ als
 %
 \begin{align}
-e_1(\mat I) &= |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \label{eq:sobelEnergy}
+\fun e_1(\mat I) &= |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \label{eq:sobelEnergy}
 \end{align}
 %
 das heißt der absoluten Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
-Wie alle separierbaren 2D-Filterkerne -- also jene, die aus zwei unabhängigen, nacheinander ausgeführten, eindimensionalen Filteroperationen bestehen -- lässt sich dieser Algorithmus effizient mit verringertem Rechenaufwand implementieren.\todo{Kann man mal durchrechnen.}
+
+\subsubsection{Separierbare Faltungskerne}
+
+Ein zweidimensionales Filter, das wie der Sobel-Operator aus dem dyadischen (bzw. Kronecker-) Produkt $\vec a \otimes \vec b$ zweier Vektoren $\vec a, \vec b$ zusammengesetzt ist, wird separierbar genannt. \todo{Quelle}
+\todo[inline]{Jede Matrix des Ranges 1 ist separierbar und kann mittels Singulärwertzerlegung in ihre äußeren Faktoren zerlegt werden. -- Quelle! (Wikipedia ...)}
+
+Da die Faltung nicht nur kommutativ, sondern auch assoziativ ist -- $(\fun f \ast \fun g) \ast \fun h = \fun f \ast (\fun g \ast \fun h)$ -- gilt für separierbare Kerne $\mat G$
+%
+\begin{align}
+\mat G \ast \mat I = (\vec g^T \ast \vec h) \ast \mat I = (\vec g^T \ast \mat I) \ast \vec h
+\end{align}
+%
+Die Faltung der Matrix $\mat I$ mit einem separierbaren Filter $\mat G = \vec g^T \ast \vec h$ ist folglich identisch mit der Faltung der Matrix $\mat I$ mit dem Vektor $\vec g^T$, gefolgt von der Faltung des Ergebnisses mit dem Vektor $\mat h$.
+
+Die Faltung einer $M \times N$-Matrix (z.B. eines Grauwertbildes) mit einem $P \times Q$-Filterkern benötigt bei einfacher Implementierung%
+\footnote{Die Faltung entspricht der Multiplikation der fouriertransformierten, weswegen es effizient sein kann, die Faltung vollständig im Fourierraum durchzuführen.}
+$M \times N \times P \times Q$ Multiplikationen und Additionen (jeder Wert der Matrix muss mit jedem Wert des Kernes multipliziert werden). 
+Unter Ausnutzung der Separierbarkeit kann die Filterung in zwei Schritten zu je $M \times N \times P$ bzw. $M \times N \times Q$ Operationen durchgeführt werden; in Summe werden hierfür demnach $M N P + M N Q = M N (P + Q)$ Operationen benötigt.
+Separierbare Filter können folglich um Faktor $\sfrac{P Q}{(P + Q)}$ schneller angewandt werden:
+Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.5$, für $5 \times 5$-Filterkerne bereits ein Speedup von $2.5$.
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.8\textwidth}
+        \includegraphics[width=\textwidth]{7A5F52750ADD07483305B0C2226A484ED74B42FD4D87B4BBBC352DCF4E8D8BB8-sobelX}
+        \caption{Ausschnitt gefiltert mit horizontalem Sobel-Operator, \cref{eq:sobel3x}}
+        \label{fig:sobelX}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.8\textwidth}
+        \includegraphics[width=\textwidth]{7A5F52750ADD07483305B0C2226A484ED74B42FD4D87B4BBBC352DCF4E8D8BB8-sobelY}
+        \caption{Ausschnitt gefiltert mit vertikalem Sobel-Operator, \cref{eq:sobel3y}}
+        \label{fig:sobelY}
+    \end{subfigure}
+    
+    \caption{\Cref{fig:vorverBild} gefiltert mit Sobel-Operator}
+    \caption*{Nur der zentrale Bildausschnitt wird dargestellt. Eine Skalierung um $\sfrac{1}{8}$ und Offsetverschiebung um $+127$ zurück in den Wertebereich $0 \dots 255$ wurde für Darstellungszwecke vorgenommen; Neutralgrau (Helligkeitswert $127$) entspricht Kantenfreiheit, dunklere Töne einer steigenden Kante (Suchrichtung links nach rechts bzw. oben nach unten), hellere Töne einer fallenden Kante.}
+\end{figure}
 
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
 \todo[inline]{Darstellung als Stems und Pixelwerte!}
