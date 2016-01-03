@@ -131,6 +131,7 @@
 \DeclareMathOperator*{\argmin}{\arg\!\min}
 \newcommand{\thetavec}{\ensuremath{\vec{\theta}}}
 \newcommand{\order}[1]{\ensuremath{\mathcal{O}(#1)}}
+\newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
 
 % "SI" units
 \sisetup{detect-weight=true, detect-family=true}
@@ -157,6 +158,23 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 \clearpage
 
 \section{Bildvorverarbeitung}
+
+\subsection{Normalisierung des Wertebereiches}
+
+\todo[inline]{Befreiung der Bildwerte von Mittelwert und Normalisierung durch Standardabweichung}
+\todo[inline]{Begründung und Quelle}
+
+Berechnung des Mittelwertes eines Bildes $\mat I$ mit $N$ Pixeln ergibt sich aus
+%
+\begin{align}
+\mean{\mat I} &= \frac{1}{N} \sum_x \sum_y \mat I[x, y]
+\end{align}
+
+Bei einer naiven Implementierung wird mit einer eine Doppelschleife über das Bild iteriert, die jeweilige Pixelintensität (pro Kanal) aufsummiert und anschließend mit der Anzahl der Bildwerte normiert.
+Hierbei muss beachtet werden, dass kein Überlauf der Summenvariablen stattfindet; dass dies unwahrscheinlich ist, zeigt folgende Betrachtung:
+Bei einem Bild mit 8 Bit Farbtiefe pro Kanal je Pixel (Wertebereich $0 \dots 255$) entspricht die maximal erreichbare Summe $N \times 255$.
+Bei einem Bild mit \SI{4}{\mega\px} (z.B. $\si{2000} \times \SI{2000}{\px}$) entspricht dies dem Wert $\si{4000000} \times 255 = \si{1020000000}$, d.h. 1,2 Milliarden.
+Ein vorzeichenfreier 32-Bit-Datentyp bildet den Wertebereich $2^0 \dots 2^{32} = 0 \dots \si{4294967295}$ ab, das heißt, die maximale kumulative Intensität beträgt ca. 4,3 Milliarden.
 
 \subsection{Cropping und Resampling}
 
