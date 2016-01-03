@@ -260,7 +260,9 @@ Würde dieses Bild nun zwecks Verringerung des Speicherbedarfs und der weiteren 
 Durch ein zuvoriges Beschneiden des Bildes auf den relevanten Bildbereich 
 -- eine genaue Definition des Begriffes "`relevant"' steht hierbei noch aus -- 
 ergäbe sich indes ein Bereich von $\SI{512}{\px} \times \SI{261}{\px}$ für bildwichtige Inhalte.
-Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung der nutzbaren Datenmenge gegenüber den naiven Ansatz. \Cref{tab:vorverDimensionen} verdeutlicht die Dimensionen und prozentualen Unterschiede.
+Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung der nutzbaren Datenmenge gegenüber den naiven Ansatz.
+Wird statt der längsten Kante die kürzeste Kante normiert, ist die nutzbare resultierende Bildfläche um so höher, jedoch auch der zur Verarbeitung notwendige Rechenaufwand.
+\Cref{tab:vorverDimensionen} verdeutlicht die Dimensionen und prozentualen Unterschiede.
 
 \begin{table}
 	\centering
@@ -272,13 +274,17 @@ Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung de
 		$P_0$ & \SI{1009}{\px} & \SI{514}{\px} & \SI{518626}{\px} & \SI{29.81}{\percent} \\
 		\midrule
 		$G_1$ & \SI{424}{\px} & \textbf{\SI{512}{\px}} & \SI{217088}{\px} & \SI{12.47}{\percent} \\	
-		$P_1$ & \SI{357}{\px} & \SI{181}{\px} & \SI{64617}{\px} & \SI{0.04}{\percent} \\
+		$P_1$ & \SI{357}{\px} & \SI{181}{\px} & \SI{64617}{\px} & \SI{3.71}{\percent} \\
 		\midrule
-		$G_2, P_2$ & \textbf{\SI{512}{\px}} & \SI{261}{\px} & \SI{133632}{\px} & \SI{0.08}{\percent} \\
+		$G_2$ & \textbf{\SI{512}{\px}} & \SI{619}{\px} & \SI{316928}{\px} & \SI{18.21}{\percent} \\	
+		$P_2$ & \SI{431}{\px} & \SI{219}{\px} & \SI{94389}{\px} & \SI{5.42}{\percent} \\		
+		\midrule
+		$G_3 = P_3$ & \textbf{\SI{512}{\px}} & \SI{261}{\px} & \SI{133632}{\px} & \SI{7.68}{\percent} \\
+		$G_4 = P_4$ & \SI{1005}{\px} & \textbf{\SI{512}{\px}} & \SI{514560}{\px} & \SI{29.57}{\percent} \\
 		\bottomrule
 	\end{tabular}
 	\caption{Vorverarbeitung: Bilddimensionen im Vergleich}
-	\caption*{$G_0, P_0$: Bereich des Gesamtbildes $G$ und Produktbildes $P$ in den ursprünglichen Dimensionen; $G_1, P_1$: Bereiche nach Verkleinerung der längsten Kante des Bildes $G$ auf \SI{512}{px}; $G_2, P_2$: Bereiche nach Entfernung der bildunwichtigen Randteile in $G$, gefolgt von Reduktion der längsten Kante auf \SI{512}{\px}.}
+	\caption*{$G_0, P_0$: Bereich des Gesamtbildes $G$ und Produktbildes $P$ in den ursprünglichen Dimensionen; $G_1, P_1$: Bereiche nach Verkleinerung der längsten Kante des Bildes $G$ auf \SI{512}{px}; $G_2, P_2$: Bereiche nach Verkleinerung der kürzesten Kante des Bildes $G$ auf \SI{512}{px}; $G_3, P_3$: Bereiche nach Entfernung der bildunwichtigen Randteile in $G$, gefolgt von Reduktion der längsten Kante auf \SI{512}{\px}; $G_4, P_4$: Analog $G_3, P_3$, jedoch Reduktion der kürzesten Kante auf \SI{512}{\px}.}
 	\label{tab:vorverDimensionen}
 \end{table}
 
