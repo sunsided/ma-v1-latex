@@ -120,6 +120,7 @@
 \newcommand{\name}[1]{\textsc{#1}}
 \newcommand{\algo}[1]{\textit{#1}}
 \newcommand{\acro}[1]{\texttt{#1}}
+\newcommand{\datatype}[1]{\texttt{#1}}
 \newcommand{\imgfile}[1]{\texttt{#1}}
 \newcommand{\engl}[1]{engl.: \textit{#1}}
 
@@ -164,17 +165,25 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 \todo[inline]{Befreiung der Bildwerte von Mittelwert und Normalisierung durch Standardabweichung}
 \todo[inline]{Begründung und Quelle}
 
-Berechnung des Mittelwertes eines Bildes $\mat I$ mit $N$ Pixeln ergibt sich aus
+Der mittlere Intensitätswert $\mean{I}$ eines Bildes $\mat I$ der Dimension $M \times N$ berechnet sich als
 %
 \begin{align}
-\mean{\mat I} &= \frac{1}{N} \sum_x \sum_y \mat I[x, y]
+\mean{I} &= \frac{1}{M \times N} \sum_y \sum_x \mat I[x, y]
 \end{align}
 
-Bei einer naiven Implementierung wird mit einer eine Doppelschleife über das Bild iteriert, die jeweilige Pixelintensität (pro Kanal) aufsummiert und anschließend mit der Anzahl der Bildwerte normiert.
-Hierbei muss beachtet werden, dass kein Überlauf der Summenvariablen stattfindet; dass dies unwahrscheinlich ist, zeigt folgende Betrachtung:
-Bei einem Bild mit 8 Bit Farbtiefe pro Kanal je Pixel (Wertebereich $0 \dots 255$) entspricht die maximal erreichbare Summe $N \times 255$.
-Bei einem Bild mit \SI{4}{\mega\px} (z.B. $\si{2000} \times \SI{2000}{\px}$) entspricht dies dem Wert $\si{4000000} \times 255 = \si{1020000000}$, d.h. 1,2 Milliarden.
-Ein vorzeichenfreier 32-Bit-Datentyp bildet den Wertebereich $2^0 \dots 2^{32} = 0 \dots \si{4294967295}$ ab, das heißt, die maximale kumulative Intensität beträgt ca. 4,3 Milliarden.
+Bei einer naiven Implementierung wird mit einer eine Doppelschleife über das Bild iteriert, die jeweilige Pixelintensität pro Kanal aufsummiert und anschließend mit der Anzahl der Bildwerte normiert.
+Hierbei muss bedacht werden, dass ein Überlauf der Summenvariablen stattfinden kann; dass dies  bei geeigneter Wahl der Datentypen unwahrscheinlich ist, zeigt folgende Betrachtung:
+
+Bei einem Bild mit 8 Bit Farbtiefe je Pixel (d.h. Wertebereich $0 \dots 255$ pro Kanal) ist die maximal erreichbare Summe $M \times N \times 255$.
+Bei einem Bild mit \SI{4}{\mega\px} (z.B. $\num{2000} \times \SI{2000}{\px}$) entspricht dies dem Wert $\num{4000000} \times 255 = \num{1020000000}$, d.h. ca. 1 Milliarde.
+
+Ein vorzeichenfreier 32-Bit-Datentyp (\datatype{unsigned int}) bildet jedoch bereits den Wertebereich $2^0 \dots 2^{32} = 0 \dots \num{4294967295}$ ab; das heißt, die maximale kumulative Intensität beträgt in diesem Fall ca. 4,3 Milliarden. 
+Unter der Annahme einer vollen Aussteuerung (d.h. jedes Pixel desselben Kanals hat die Intensität $255$) ist der Wertebereich für Bilder bis $\sfrac{2^{32}}{255} \approx \SI{16843009}{\mega\px}$ abgedeckt; dies entspricht ungefähr einem Bild der Dimension $\num{4104} \times \SI{4104}{\px}$.
+Bei Verwendung eines vorzeichenfreien 64-Bit-Datentyps (\datatype{unsigned long}) beträgt der maximale Wert bereits $2^{64} = \num{18446744073709551616}$, d.h. 18 Trillionen, und entspräche bei gleichen Bedingungen 72 Billiarden Pixeln -- etwa einem Bild der Dimension $\num{268961285} \times \SI{268961285}{\px}$ und einem Speicherbedarf von ca. $\SI{72340172}{\gibi\byte}$ pro Kanal.
+Da heutige Prozessorarchitekturen \todo{Beispiele} auf die Verarbeitung von 64-Bit-Typen spezialisiert sind, ist ein solcher eine geeignete Wahl für eine derartige naive Implementierung.
+
+\todo[inline]{Übergang zur Berechnung der (Stichproben-)Varianz (benötigt Erwartungs- oder Mittelwert) und Begründung für zweiphasige Berechnung, da Sobel-Operator.}
+\todo[inline]{Beschreibung der on-line-Berechnung von Mittelwert und Standardabweichung}
 
 \subsection{Cropping und Resampling}
 
