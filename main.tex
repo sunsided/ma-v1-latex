@@ -168,7 +168,7 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 Der mittlere Intensitätswert $\mean{I}$ eines Bildes $\mat I$ der Dimension $M \times N$ berechnet sich als
 %
 \begin{align}
-\mean{I} &= \frac{1}{M \times N} \sum_y \sum_x \mat I[x, y]
+\mean{I} &= \frac{1}{M \times N} \sum_y \sum_x \mat I[x, y] \label{eq:mean}
 \end{align}
 
 Bei einer naiven Implementierung wird mit einer eine Doppelschleife über das Bild iteriert, die jeweilige Pixelintensität pro Kanal aufsummiert und anschließend mit der Anzahl der Bildwerte normiert.
@@ -184,6 +184,29 @@ Da heutige Prozessorarchitekturen \todo{Beispiele} auf die Verarbeitung von 64-B
 
 \todo[inline]{Übergang zur Berechnung der (Stichproben-)Varianz (benötigt Erwartungs- oder Mittelwert) und Begründung für zweiphasige Berechnung, da Sobel-Operator.}
 \todo[inline]{Beschreibung der on-line-Berechnung von Mittelwert und Standardabweichung}
+
+Die Varianz der Bildintensitäten ist die mittlere quadratische Abweichung der einzelnen Intensitäten von ihrem Mittelwert $\mean{I}$:
+%
+\begin{align}
+\sigma^2_I &= \frac{1}{M \times N} \sum_y \sum_x \left( \mat I[x, y] - \mean{I} \right)^2 \label{eq:variance}
+\end{align}
+
+Diese Formel setzt bei naiver Implementierung die Kenntnis des Mittelwertes $\mean{I}$ voraus und bedarf daher einer zusätzlichen Iteration über alle Pixel, wenn dies nicht der Fall ist.
+Eine Form der on-line-Berechnung von Varianz und Mittelwert, die in nur eines Durchlaufes über alle Pixel bedarf, beschreibt \cite[216]{knuth85Seminumerical} als rekursive Berechnung über alle Bildwerte $x_k, k \in \left[1, M \times N \right]$ (\cref{eq:onlineVarianceM,eq:onlineVarianceS}), wobei sich die Varianz $\sigma^2_I$ gemäß \cref{eq:onlineVariance} ergibt:
+%
+\begin{align}
+\begin{split}
+	M_1 &= x_1 \\
+	M_{k} &= M_{k-1} + \frac{(x_k - M_{k-1})}{k}
+\end{split} \label{eq:onlineVarianceM} \\
+\begin{split}
+	S_1 &= 0 \\
+	S_{k} &= S_{k-1} \left( x_k - M_{k-1} \right) \left( x_k - M_k \right)
+\end{split} \label{eq:onlineVarianceS} \\
+\sigma^2_I &= \sigma^2_n = \frac{S_n}{n - 1} \quad \text{mit} \quad n = M \times N \label{eq:onlineVariance}
+\end{align}
+%
+Nachteilig ist hierbei jedoch die in jedem Durchgang durchzuführende Division, welche die Verwendung von Fließkomma- oder Fixed-Point-Operationen erfordert, die ihrerseits sich aggregierende Rundungsfehler mit sich führen können.
 
 \subsection{Cropping und Resampling}
 
