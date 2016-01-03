@@ -368,7 +368,19 @@ Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Ri
  \end{bmatrix} = \mat g_{diff}^T \otimes \mat g_{smooth} \label{eq:sobel3y}
 \end{align}
 
-Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge üblicherweise \todo{wie oft ist oft} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
+Der Vektor der partiellen Ableitungen $\frac{\partial \mat I}{\partial x}$, $\frac{\partial \mat I}{\partial y}$ beschreibt den Gradienten $\nabla \mat I$ eines Bildes
+%
+\begin{align}
+\nabla \mat I = 
+	\begin{bmatrix}
+	\sfrac{\partial \mat I}{\partial x} \\
+	\sfrac{\partial \mat I}{\partial y}
+	\end{bmatrix}  \label{eq:gradient}
+\end{align}
+%
+welcher anschaulich eine Menge von Richtungsvektoren beschreibt, entlang derer die einzelnen Pixel des Bildes ausgerichtet sind; der Sobel-Operator beschreibt eine mögliche Approximation des "`echten"' Gradienten.
+
+Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge üblicherweise \todo{Quelle} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
 \footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt wird.
 
 Analog \cref{eq:seamEnergy1} ergibt sich nun das Energiebild des Bildes $\mat I$ als
@@ -378,6 +390,10 @@ Analog \cref{eq:seamEnergy1} ergibt sich nun das Energiebild des Bildes $\mat I$
 \end{align}
 %
 das heißt der absoluten Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
+
+\todo[inline]{Weitere Energie ergibt sich über Grauwert-Cooccurence-Matrix, siehe \url{http://de.mathworks.com/help/images/ref/graycoprops.html} und 
+\url{http://de.mathworks.com/help/images/ref/graycomatrix.html}}
+\todo[inline]{Referenz auf Quadrat der Beträge aus Wahrscheinlichkeit des Intensitätswertes -- analog Cooccurence \url{http://stackoverflow.com/a/34273211}}
 
 \subsubsection{Separierbare Faltungskerne}
 
@@ -414,7 +430,7 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
     \end{subfigure}
     
     \caption{\Cref{fig:vorverBild} gefiltert mit Sobel-Operator}
-    \caption*{Nur der zentrale Bildausschnitt wird dargestellt. Eine Skalierung um $\sfrac{1}{8}$ und Offsetverschiebung um $+127$ zurück in den Wertebereich $0 \dots 255$ wurde für Darstellungszwecke vorgenommen; Neutralgrau (Helligkeitswert $127$) entspricht Kantenfreiheit, dunklere Töne einer steigenden Kante (Suchrichtung links nach rechts bzw. oben nach unten), hellere Töne einer fallenden Kante.}
+    \caption*{Nur der zentrale Bildausschnitt wird dargestellt. Eine Skalierung um $\sfrac{1}{8}$ und Offsetverschiebung um $+127$ zurück in den Wertebereich $0 \dots 255$ ($0$ entspricht schwarz, $255$ entspricht weiß) wurde für Darstellungszwecke vorgenommen; Neutralgrau (Helligkeitswert $127$) entspricht Kantenfreiheit, dunklere Töne einer steigenden Kante (Suchrichtung links nach rechts bzw. oben nach unten), hellere Töne einer fallenden Kante.}
 \end{figure}
 
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
