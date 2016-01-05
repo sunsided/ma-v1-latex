@@ -1,5 +1,6 @@
-\documentclass[a4paper, 11pt, english, ngerman]{article}
+\documentclass[a4paper, 11pt, oneside, english, german, ngerman]{thesis}
 
+\usepackage{fancyhdr}
 \usepackage{eurosym}
 \usepackage{geometry}
 \usepackage{lipsum}
@@ -14,7 +15,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{inconsolata}
 \usepackage{lmodern}
-\usepackage[english,ngerman]{babel}
+\usepackage[english,german,ngerman]{babel}
 \usepackage{xspace}
 
 \usepackage[super]{nth}
@@ -52,6 +53,8 @@
 \definecolor{greencomments}{rgb}{0,0.5,0}
 \definecolor{redstrings}{rgb}{0.9,0,0}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\hypersetup{urlcolor=black, colorlinks=true}
 
 \lstset{literate=
   {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
@@ -138,6 +141,11 @@
 \sisetup{detect-weight=true, detect-family=true}
 \DeclareSIUnit	\px{px}
 
+\hypersetup{pdftitle={Large Scale Image Retrieval Using Features Extracted From Mobile Phone Camera Stills}}
+\hypersetup{pdfsubject={Image Retrieval}} 
+\hypersetup{pdfauthor={Markus Mayer}} 
+\hypersetup{pdfkeywords={{Image Retrieval}, {CBIR}, {Image Matching}}}
+
 \begin{titlepage}
 	\title{\textbf{Large Scale Image Retrieval} \\ Using Features Extracted From \\ Mobile Phone Camera Stills}
 	\author{Markus Mayer}
@@ -155,12 +163,37 @@
 Like regular \textit{Image Retrieval}, but on a larger scale.
 \end{abstract}
 
-\tableofcontents
+\frontmatter
+\pagenumbering{roman} 
+\pagestyle{fancy}
+
 \clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Inhaltsverzeichnis}
+\tableofcontents
 
-\section{Bildvorverarbeitung}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Abbildungsverzeichnis}
+\listoffigures
 
-\subsection{Normalisierung des Wertebereiches}
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
+\listoftables
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Listings}
+\lstlistoflistings
+
+\mainmatter
+\pagenumbering{arabic}
+\pagestyle{fancy}
+
+\chapter{Bildvorverarbeitung}
+
+\section{Normalisierung des Wertebereiches}
 
 \todo[inline]{Befreiung der Bildwerte von Mittelwert und Normalisierung durch Standardabweichung}
 \todo[inline]{Begründung und Quelle}
@@ -198,17 +231,20 @@ Eine Form der on-line-Berechnung von Varianz und Mittelwert, die in nur eines Du
 \begin{split}
 	M_1 &= x_1 \\
 	M_{k} &= M_{k-1} + \frac{(x_k - M_{k-1})}{k}
-\end{split} \label{eq:onlineVarianceM} \\
+\end{split} \label{eq:onlineVarianceM} \\ \notag \\
 \begin{split}
 	S_1 &= 0 \\
 	S_{k} &= S_{k-1} \left( x_k - M_{k-1} \right) \left( x_k - M_k \right)
-\end{split} \label{eq:onlineVarianceS} \\
-\sigma^2_I &= \sigma^2_n = \frac{S_n}{n - 1} \quad \text{mit} \quad n = M \times N \label{eq:onlineVariance}
+\end{split} \label{eq:onlineVarianceS} \\ \notag \\
+\begin{split}
+	\mean{x}_n &= M_n \\
+	\sigma^2_I &= \sigma^2_n = \frac{S_n}{n - 1} \quad \text{mit} \quad n = M \times N \label{eq:onlineVariance}
+\end{split}
 \end{align}
 %
 Nachteilig ist hierbei jedoch die in jedem Durchgang durchzuführende Division, welche die Verwendung von Fließkomma- oder Fixed-Point-Operationen erfordert, die ihrerseits sich aggregierende Rundungsfehler mit sich führen können.
 
-\subsection{Cropping und Resampling}
+\section{Cropping und Resampling}
 
 \todo[inline]{Da die Ausgangsbilder im Wesentlichen aus (zum Großteil freigestellten) Produkt-Werbefotos bestehen ...}
 
@@ -288,7 +324,7 @@ Wird statt der längsten Kante die kürzeste Kante normiert, ist die nutzbare re
 	\label{tab:vorverDimensionen}
 \end{table}
 
-\subsection{Energiebasiertes Retargeting mittels Sobel-Operator}
+\section{Energiebasiertes Retargeting}
 
 Bildretargeting befasst sich mit der Aufgabe, ein Bild fester Dimension auf Zielen mit vom Bild unterschiedlicher oder generell variabler Dimension darzustellen, wie es etwa im Rahmen von responsive designs von Webseiten \todo{erklären} oder bei Smartphones beim Wechsel von vertikaler Lage ("`portrait mode"') zu horizontaler Lage ("`landscape mode"') notwendig wird.
 %
@@ -306,7 +342,7 @@ Ein wünschenswerter Zustand ist es, Bildteile stattdessen entsprechend ihrer Wi
 %
 Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
 
-\subsubsection{Eindimensionale Faltung zur approximativen Differenzierung}
+\subsection{Eindimensionale Faltung zur approximativen Differenzierung}
 
 Eine Approximation der Ableitung $\sfrac{\partial \fun f}{\partial x}$ ist der zentrale Differenzenquotient
 %
@@ -388,7 +424,7 @@ Zwei eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:le
 
 In jedem Fall kollidiert jedoch die Aufgabe der Differenzierung in Laufrichtung des Filters mit der Glättung in derselben Richtung, da beide Operationen gegenteilige Ziele verfolgen (jener die Detektion, dieser die Minderung von Sprüngen).
 
-\subsubsection{Sobel-Operator und zweidimensionale Faltung}
+\subsection{Sobel-Operator und zweidimensionale Faltung}
 
 Der \algo{Sobel-Operator} (nach \cite{Sobel:1968:Talk}, beschrieben in \cite{Sobel:2015:Online}) löst dieses Problem im zweidimensionalen Raum, indem er die Glättungsoperation stattdessen orthogonal zur Suchrichtung ausführt.
 %Soll in horizontaler Richtung differenziert werden, wird hierzu ("`zuerst"') in vertikaler Richtung geglättet.
@@ -459,7 +495,7 @@ das heißt der absoluten Summe des mit jedem Sobel-Operatoren separat gefalteten
 \url{http://de.mathworks.com/help/images/ref/graycomatrix.html}}
 \todo[inline]{Referenz auf Quadrat der Beträge aus Wahrscheinlichkeit des Intensitätswertes -- analog Cooccurence \url{http://stackoverflow.com/a/34273211}}
 
-\subsubsection{Separierbare Faltungskerne}
+\subsection{Separierbare Faltungskerne}
 
 Ein zweidimensionales Filter, das wie der Sobel-Operator aus dem dyadischen (bzw. Kronecker-) Produkt $\vec a \otimes \vec b$ zweier Vektoren $\vec a, \vec b$ zusammengesetzt ist, wird separierbar genannt. \todo{Quelle}
 \todo[inline]{Jede Matrix des Ranges 1 ist separierbar und kann mittels Singulärwertzerlegung in ihre äußeren Faktoren zerlegt werden. -- Quelle! (Wikipedia ...)}
@@ -551,7 +587,7 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
 \todo[inline]{Intuitive Erklärung für zentralen Differenzenquotienten}
 \todo[inline]{Sample und Plots für gefilterte Daten}
 
-\section{Übersicht der Literatur}
+\chapter{Übersicht der Literatur}
 
 \cite{orb} beschreiben einen neuen binären Deskriptor genannt \algo{ORB}, der auf \algo{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \algo{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}. Unterstellt dabei, dass \algo{SURF} besser ist als \algo{SIFT}; liefert Quelle für \algo{SURF}.
 
@@ -578,15 +614,21 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 \cite[395]{corke2011robotics} beschreibt \algo{RANSAC} in MATLAB.
 \cite[373]{corke2011robotics} beschreibt Featureextraktion.
 
-\section{Section B}
+\chapter{Leerer Abschnitt}
 
+\clearpage
+\pagenumbering{Roman}
+\appendix
+\backmatter
 
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Bildquellen}
+\printbibliography[keyword=image,title={Bildquellen}]
 
-
-% print the list of figures
-\addcontentsline{toc}{section}{List of Figures}
-\listoffigures
-
-\printbibliography
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{Literatur}
+\printbibliography[notkeyword=image]
 
 \end{document}
