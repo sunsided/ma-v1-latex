@@ -2,4 +2,4 @@
 build/
 !*.tex
 !*.bib
-!images/
+!images/**

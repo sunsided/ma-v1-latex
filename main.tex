@@ -311,21 +311,20 @@ Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes 
 Eine Approximation der Ableitung $\sfrac{\partial \fun f}{\partial x}$ ist der zentrale Differenzenquotient
 %
 \begin{align}
-\frac{\partial \fun f}{\partial x} &\approx \frac{\fun f(x+\Delta x) - \fun f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
+\frac{\partial \fun f}{\partial x} &\approx \Delta f(x) = \frac{\fun f(x+\Delta x) - \fun f(x-\Delta x)}{2\Delta x} \label{eq:centralDifferenceOperator}
 \end{align}
 %
 der sich bei einer diskreten Schrittweite von $\Delta x = \Delta k = 1$ als Faltung (\engl{convolution}) $(\fun f \ast \fun g)[k]$ von $\fun f[k]$ mit der Funktion
 \begin{align}
 \fun g[k] = 
 	\begin{cases}
-		-\frac{1}{2} & \text{wenn } k = +1 \\
-		+\frac{1}{2} & \text{wenn } k = -1 \\
+		-\frac{1}{2} & \text{wenn } k = -1 \\
+		+\frac{1}{2} & \text{wenn } k = +1 \\
 		0 & \text{sonst}
 	\end{cases} \label{eq:conv1DKernel}
 \end{align}
 %
-abbilden lässt.
-Die Überkreuzung der Vorzeichen im sog. Faltungskern erklärt sich über die Definition der diskreten Faltung:
+Die diskrete Faltung ist dabei definiert als:
 %
 \begin{align}
 (\fun f \ast \fun g)[n] &= \sum_k \fun f[k] \cdot \fun g[n - k] \\
@@ -362,8 +361,8 @@ Bei Darstellung der Funktion $f[n]$ und des Faltungskerns $g[n]$ in vektorieller
 Der in \cref{eq:conv1DKernel} beschriebene eindimensionale Faltungskern zur Berechnung des zentralen Differenzenquotienten zur diskreten Approximation des Differentialquotienten gemäß \cref{eq:centralDifferenceOperator} beschreibt sich so als
 %
 \begin{align}
-\mat g_{diff} = \begin{bmatrix}
- 1 & 0 & -1
+\mat g_{diff} = \frac{1}{2} \begin{bmatrix}
+ -1 & 0 & +1
  \end{bmatrix} \label{eq:len3diffKernel}
 \end{align}
 
@@ -379,10 +378,10 @@ Einen einfachen, aber effektiven Glättungsprozess stellt dabei der (lokal) gewi
 Zwei eindimensionale Glättungskern in horizontaler Richtung stellen \cref{eq:len3meanKernel1D} (ein einfacher Mittelwert über die direkte Nachbarschaft), sowie \cref{eq:len3smoothKernel1D} (ein gewichteter Mittelwert über dieselbe Nachbarschaft) dar:
 %
 \begin{align}
-\mat g_{mean} = \begin{bmatrix}
+\mat g_{mean} = \frac{1}{3} \begin{bmatrix}
  1 & 1 & 1
  \end{bmatrix} \label{eq:len3meanKernel1D} \\
-\mat g_{smooth} = \begin{bmatrix}
+\mat g_{smooth} = \frac{1}{4} \begin{bmatrix}
  1 & 2 & 1
  \end{bmatrix} \label{eq:len3smoothKernel1D}
 \end{align}
@@ -405,22 +404,22 @@ welche einen zweidimensionalen Filterkern (eine Matrix) auf eine zweidimensional
 Der 2D-Filterkern des Sobel-Operators zur Differenzierung in horizontaler Richtung $\mat G_{x}$ ergibt sich nun aus der Überlagerung der Kerne $\mat g_{smooth}$ und $\mat g_{diff}$ mittels des dyadischen (bzw. Kronecker-)Produktes als
 %
 \begin{align}
-\mat G_{x} &= 
+\mat G_{x} &= \frac{1}{8}
 \begin{bmatrix}
- 1 & 0 & -1 \\
- 2 & 0 & -2 \\
- 1 & 0 & -1
+ -1 & 0 & 1 \\
+ -2 & 0 & 2 \\
+ -1 & 0 & 1
  \end{bmatrix} = \mat g_{smooth}^T \otimes \mat g_{diff} \label{eq:sobel3x}
 \end{align}
 
 Analog existiert ein Operator $\mat G_{y}$ für Differenzierung in vertikaler Richtung mit
 %
 \begin{align}
-\mat G_{y} &= 
+\mat G_{y} &= \frac{1}{8}
 \begin{bmatrix}
- 1 & 2 &  1 \\
+ -1 & -2 & -1 \\
  0 & 0 & 0 \\
- -1 & -2 & -1
+ 1 & 2 & 1
  \end{bmatrix} = \mat g_{diff}^T \otimes \mat g_{smooth} \label{eq:sobel3y}
 \end{align}
 
@@ -429,8 +428,12 @@ Der Vektor der partiellen Ableitungen $\frac{\partial \mat I}{\partial x}$, $\fr
 \begin{align}
 \nabla \mat I = 
 	\begin{bmatrix}
-	\sfrac{\partial \mat I}{\partial x} \\
-	\sfrac{\partial \mat I}{\partial y}
+		\sfrac{\partial \mat I}{\partial x} \\
+		\sfrac{\partial \mat I}{\partial y}
+	\end{bmatrix} \approx
+	\begin{bmatrix}
+		\Delta_x \mat I \\
+		\Delta_y \mat I
 	\end{bmatrix}  \label{eq:gradient}
 \end{align}
 %
@@ -438,14 +441,19 @@ welcher anschaulich eine Menge von Richtungsvektoren beschreibt, entlang derer d
 
 Eine nennenswerte Eigenschaft der Differenzierung von Bildern ist, dass die so ermittelten Intensitätssprünge üblicherweise \todo{Quelle} einhergehen mit dem Vorhandensein von Kanten abgebildeter Objekte, weswegen der Sobel-Operator regelmäßig als einfacher%
 \footnote{Der Sobel-Operator ist nicht anisotrop; seine Sensitivität gegenüber diagonalen Kanten -- insbesonderer solcher im 45°-Winkel zu den beiden Suchrichtungen -- ist minimal.}, wenngleich effizienter Kantendetektor eingesetzt wird.
+\Cref{fig:sobelGlasses,fig:sobelMascara} demonstrieren die Wirkung des Sobel-Operators.
 
 Analog \cref{eq:seamEnergy1} ergibt sich nun das Energiebild des Bildes $\mat I$ als
 %
 \begin{align}
-\fun e_1(\mat I) &= |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \label{eq:sobelEnergy}
+\begin{split}
+\fun e_1(\mat I) &\approx |\mat G_x \ast \mat I| + |\mat G_y \ast \mat I| \\
+                 &= |\Delta_x \mat I| + |\Delta_y \mat I|
+\end{split} \label{eq:sobelEnergy}
 \end{align}
 %
 das heißt der absoluten Summe des mit jedem Sobel-Operatoren separat gefalteten Bildes.
+\Cref{fig:mascaraEnergy} zeigt exemplarisch das Energiebild von \cref{fig:mascara}.
 
 \todo[inline]{Weitere Energie ergibt sich über Grauwert-Cooccurence-Matrix, siehe \url{http://de.mathworks.com/help/images/ref/graycoprops.html} und 
 \url{http://de.mathworks.com/help/images/ref/graycomatrix.html}}
@@ -484,9 +492,57 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
         \caption{Ausschnitt gefiltert mit vertikalem Sobel-Operator, \cref{eq:sobel3y}}
         \label{fig:sobelY}
     \end{subfigure}
-    
+
     \caption{\Cref{fig:vorverBild} gefiltert mit Sobel-Operator}
-    \caption*{Nur der zentrale Bildausschnitt wird dargestellt. Eine Skalierung um $\sfrac{1}{8}$ und Offsetverschiebung um $+127$ zurück in den Wertebereich $0 \dots 255$ ($0$ entspricht schwarz, $255$ entspricht weiß) wurde für Darstellungszwecke vorgenommen; Neutralgrau (Helligkeitswert $127$) entspricht Kantenfreiheit, dunklere Töne einer steigenden Kante (Suchrichtung links nach rechts bzw. oben nach unten), hellere Töne einer fallenden Kante.}
+    \caption*{Nur der zentrale Bildausschnitt wird dargestellt. Eine Skalierung um $\sfrac{1}{8}$ und Offsetverschiebung um $+127$ zurück in den Wertebereich $0 \dots 255$ ($0$ entspricht schwarz, $255$ entspricht weiß) wurde für Darstellungszwecke vorgenommen; Neutralgrau (Helligkeitswert $127$) entspricht Kantenfreiheit, hellere Töne einer steigenden Flanke (Suchrichtung links nach rechts bzw. oben nach unten), dunklere Töne einer fallenden Flanke.}
+    \label{fig:sobelGlasses}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D}
+        \caption{Original} \label{fig:mascara}
+    \end{subfigure}
+    %
+    \begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-intensity}
+        \caption{Intensity} \label{fig:mascara_intensity}
+    \end{subfigure}
+    %
+    \begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-gleam}
+        \caption{Gleam} \label{fig:mascara_gleam}
+    \end{subfigure}
+           
+    \caption{Graustufenumwandlung Intensity und Gleam}
+    \caption*{Umwandlung des Originalbildes mittels Intensity- und Gleam-Methode. \\ \centering Mascara, \cite{Lacome:2015:Mascara:Online}}
+\end{figure}
+
+\begin{figure}
+	\centering
+    \begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-sobelX}
+        \caption{$\Delta_x \mat I$}
+        \label{fig:mascaraSobelX}
+    \end{subfigure}
+    \quad
+    \begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-sobelY}
+        \caption{$\Delta_y \mat I$}
+        \label{fig:mascaraSobelY}
+    \end{subfigure}    
+    \quad
+    \begin{subfigure}[b]{0.25\textwidth}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-energy}
+        \caption{$|\Delta_x \mat I| + |\Delta_y \mat I|$}
+        \label{fig:mascaraEnergy}
+    \end{subfigure}     
+           
+    \caption{\Cref{fig:mascara} gefiltert mit Sobel-Operator, Energiebild}
+    \caption*{Anwendung der Sobel-Operatoren aus \cref{eq:sobel3x,eq:sobel3y} in X- und Y-Richtung auf \cref{fig:mascara}, sowie Energiebild gemäß \cref{eq:sobelEnergy}.
+    Normierung auf Wertebereich $0 \dots 255$ analog \cref{fig:sobelGlasses}.}
+    \label{fig:sobelMascara}
 \end{figure}
 
 \todo[inline]{Stellt Kanten mit doppelter Breite dar}
