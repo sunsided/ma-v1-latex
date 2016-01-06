@@ -211,13 +211,13 @@ Die Transformation von unabhängigen Farbintensitätskanälen, wie sie aus der a
 \cite{kanan2012color} weisen darauf hin, dass die exakte Methode der Umwandlung von Farb- in Intensitätswerte oft nicht näher spezifiziert und als irrelevant bezüglich der weiteren Verarbeitung angenommen wird.
 Sie vergleichen daher verschiedene wahrnehmungs- und nicht-wahrnehmungspsychologisch inspirierte Methoden der Konvertierung und überprüfen diese mittels der Extraktion der Featuredeskriptoren \algo{SIFT}, \algo{SURF}, \algo{Geometric Blur} und \algo{Local Binary Patterns} an verschiedenen Bilddatensätzen, u.a. kategorisierten Objekten in Caltech 101 (\cite{fei2007learning,caltech101:online}), Gesichtern des AR Face Dataset (\cite{martinez1998benavente}) und Objekten in variablen Ausleuchtungsszenarien in \cite{barnard2002data}. 
 Hervorzuheben sind hierbei die Methoden \algo{Intensity}, \algo{Gleam}, \algo{Luminance}, \algo{Luma} und \algo{Lightness}, sowie \algo{Luster}.
-Einige der Methoden bedienen sich dabei der Gamma-Korrekturfunktion
+Der Wertebereich wird als $0 \dots 1$ angenommen, wobei einige der Methoden sich der Gamma-Korrekturfunktion
 %
 \begin{align}
 \Gamma(t) = t^{\sfrac{1}{\gamma}}
 \end{align}
 %
-mit $\gamma = 2.2$.
+mit $\gamma = 2.2$ bedienen.
 Diese Funktion überführt die lineare Farbintensität $t$ in eine nichtlineare, der menschlichen Helligkeitswahrnehmung ähnlicheren Abbildung. \todo{Quelle}
 
 \algo{Intensity} und \algo{Gleam} entsprechen dem regulären und gamma-korrigierten Mittelwert der drei \RGB-Farbkanäle (vgl. \cref{fig:conv_intensity,fig:conv_gleam}):
