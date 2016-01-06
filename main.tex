@@ -127,6 +127,12 @@
 \newcommand{\imgfile}[1]{\texttt{#1}}
 \newcommand{\engl}[1]{engl.: \textit{#1}}
 
+\newcommand{\LAB}{L\textsuperscript{\tiny *}a\textsuperscript{\tiny *}b\textsuperscript{\tiny *}}
+\newcommand{\LUV}{L\textsuperscript{\tiny *}u\textsuperscript{\tiny *}v\textsuperscript{\tiny *}}
+\newcommand{\RGB}{RGB}
+\newcommand{\HLS}{HLS}
+\newcommand{\HSV}{HSV}
+
 % math commands
 \renewcommand{\vec}{\vectorsym}
 \newcommand{\mat}{\matrixsym}
@@ -193,7 +199,137 @@ Like regular \textit{Image Retrieval}, but on a larger scale.
 
 \chapter{Bildvorverarbeitung}
 
-\section{Normalisierung des Wertebereiches}
+\section{Kanalreduktion und Graustufenumwandlung}
+
+Während für einige Methoden der Bildanalyse und des Content-Based Image Retrieval Farbinformationen -- z.B. in Form von Farbhisto- und -korrelogrammen -- eine Rolle spielen, ist dies für andere Methoden -- etwa Scale-Invariant Feature Transforms oder Local Binary Patterns - nicht der Fall.
+Eine Grundannahme ist hier, dass bildrelevante Merkmale weniger in Farb-, als in Intensitätsunterschieden zu finden sind, wie sie etwa durch Objektkanten hervorgerufen werden.
+Die Transformation von unabhängigen Farbintensitätskanälen, wie sie aus der additiven (RGB-) oder subtraktiven (CMY-) Farbmischung bekannt sind, auf einen einzigen (idealerweise dekorrelierten) Intensitätskanal führt dabei ebenfalls zu einer Verringerung der notwendigen Verarbeitungszeit und Speicherkapazität, was insbesondere einer Echtzeit-Datenverarbeitung entgegenkommt.
+
+\subsection{Graustufenumwandlung}
+\label{subsec:graustufen}
+
+\cite{kanan2012color} weisen darauf hin, dass die exakte Methode der Umwandlung von Farb- in Intensitätswerte oft nicht näher spezifiziert und als irrelevant bezüglich der weiteren Verarbeitung angenommen wird.
+Sie vergleichen daher verschiedene wahrnehmungs- und nicht-wahrnehmungspsychologisch inspirierte Methoden der Konvertierung und überprüfen diese mittels der Extraktion der Featuredeskriptoren \algo{SIFT}, \algo{SURF}, \algo{Geometric Blur} und \algo{Local Binary Patterns} an verschiedenen Bilddatensätzen, u.a. kategorisierten Objekten in Caltech 101 (\cite{fei2007learning,caltech101:online}), Gesichtern des AR Face Dataset (\cite{martinez1998benavente}) und Objekten in variablen Ausleuchtungsszenarien in \cite{barnard2002data}. 
+Hervorzuheben sind hierbei die Methoden \algo{Intensity}, \algo{Gleam}, \algo{Luminance}, \algo{Luma} und \algo{Lightness}, sowie \algo{Luster}.
+Einige der Methoden bedienen sich dabei der Gamma-Korrekturfunktion
+%
+\begin{align}
+\Gamma(t) = t^{\sfrac{1}{\gamma}}
+\end{align}
+%
+mit $\gamma = 2.2$.
+Diese Funktion überführt die lineare Farbintensität $t$ in eine nichtlineare, der menschlichen Helligkeitswahrnehmung ähnlicheren Abbildung. \todo{Quelle}
+
+\algo{Intensity} und \algo{Gleam} entsprechen dem regulären und gamma-korrigierten Mittelwert der drei \RGB-Farbkanäle (vgl. \cref{fig:conv_intensity,fig:conv_gleam}):
+%
+\begin{align}
+\mat I_{Intensity} &= \frac{1}{3}(\mat R + \mat G + \mat B) \\
+\mat I_{Gleam} &= \frac{1}{3}(\Gamma(\mat R) + \Gamma(\mat G) + \Gamma(\mat B))
+\end{align}
+
+"`\algo{Luster}"' ist der \textit{Lightness}-Kanal des \HLS-Farbraumes (Hue, Lightness, Saturation) und entspricht dem Mittelwert der minimalen und maximalen \RGB-Kanalintensitäten
+%
+\begin{align}
+\mat I_{Luster} &= \frac{1}{2} \left( \min (\mat R, \mat G, \mat B) + \max (\mat R, \mat G, \mat B) \right)
+\end{align}
+%
+und entspricht einer ausreißertoleranteren Variante des Value-Kanals $\mat I_{Value} = \max (\mat R, \mat G, \mat B)$ des \HSV-Farbraumes (Hue, Saturation, Value); vgl. \cref{fig:conv_luster,fig:conv_value}.
+
+Die Methoden \algo{Luminance} \todo{Quelle Pratt} und \algo{Luma} (vgl. \cref{fig:conv_luminance,fig:conv_luma}) arbeiten als gewichtete Summe der einzelnen Farbintensitäten, definiert als
+%
+\begin{align}
+\mat I_{Luminance} &= 0.299 \mat R + 0.587 \mat G + 0.114 \mat B \\
+\mat I_{Luma} &= 0.2126 \, \Gamma(\mat R) + 0.7152 \, \Gamma(\mat G) + 0.0722 \, \Gamma(\mat B)
+\end{align}
+%
+wobei $\mat I_{Luma}$ einer gammakorrigierten Form von $\mat I_{Luminance}$ entspricht, die für High-Definition-TV-Geräte entwickelt wurde \todo{Quelle}.
+\Cite{nixon2012feature} definieren $\mat I_{Luminance}$ derweil unterschiedlich als
+%
+\begin{align*}
+\mat I_{Luminance} &= 0.18 \mat R + 0.79 \mat G + 0.02 \mat B
+\end{align*}
+%
+Dieser Unterschied dürfte jedoch keinen maßgeblichen Einfluss auf das von \citeauthor{kanan2012color} ermittelte Ergebnis haben.
+
+\algo{Lightness} schlussendlich entspricht der wahrnehmungspsychologisch gleichmäßigen Helligkeitsinformation $L^*$ der \LAB- und \LUV-Farbräume (CIE-LAB und CIE-LUV), definiert als
+%
+\begin{align}
+\mat I_{Lightness} &= \frac{1}{100}\left(100 \, f(\mat Y) - 16\right)
+\end{align}
+%
+mit
+%
+\begin{align*}
+\mat Y &= 0.2126 \mat R + 0.7152 \mat G + 0.0722 \mat B \\
+f(t) &= \begin{cases}
+		t^{\sfrac{1}{3}} & \text{wenn} \quad t > (\sfrac{6}{29})^3 \\
+		\frac{1}{3}\left(\frac{29}{6} \right)^2 t + \frac{4}{29} & \text{sonst}
+	\end{cases}
+\end{align*}
+%
+wobei der Wertebereich auf $0 \dots 1$ normiert wurde (vgl. \cref{fig:conv_lightness}).
+Diese Farbräume dekorrelieren Helligkeits- von Farbinformationen, wobei die a\textsuperscript{\tiny *}- und b\textsuperscript{\tiny *}-, bzw. u\textsuperscript{\tiny *}- und v\textsuperscript{\tiny *}-Achsen komplementäre Farbinformationen abbilden (etwa rot-grün und glau-gelb). \todo{Quelle}
+
+\todo[inline]{Gleam ca. 20\% heller}
+\todo[inline]{Gamma-korrigierte Umwandlungen von Vorteil}
+\todo[inline]{beste Kandidaten nennen}
+\todo[inline]{Lightness und wahrnehmungspsychologie völlig egal}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/rgb}
+        \caption{\RGB}
+        \label{fig:conv_rgb}
+    \end{subfigure}
+    \quad 
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/intensity}
+        \caption{Intensity}
+        \label{fig:conv_intensity}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/value}
+        \caption{Value (\HSV)}
+        \label{fig:conv_value}
+    \end{subfigure}
+    \quad
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/luster}
+        \caption{"`Luster"' (\HLS)}
+        \label{fig:conv_luster}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/luminance}
+        \caption{Luminance}
+        \label{fig:conv_luminance}
+    \end{subfigure}
+	\quad
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/gleam}
+        \caption{Gleam}
+        \label{fig:conv_gleam}
+    \end{subfigure}
+
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/luma}
+        \caption{Luma}
+        \label{fig:conv_luma}
+    \end{subfigure}
+    \quad
+    \begin{subfigure}[b]{0.4\textwidth}
+        \includegraphics[width=\textwidth]{conversion/lightness}
+        \caption{Lightness (\LAB, \LUV)}
+        \label{fig:conv_lightness}
+    \end{subfigure}
+
+    \caption{Vergleich verschiedener Konvertierungen von Farb- zu Grauwerten}
+    \caption*{Vergleich der in \cref{subsec:graustufen} beschriebenen Konvertierungen der \RGB-Farbkanäl von \cref{fig:conv_rgb} in Intensitätswerte.}
+\end{figure}
+
+\section{Normalisierung der Intensitäten}
 
 \todo[inline]{Befreiung der Bildwerte von Mittelwert und Normalisierung durch Standardabweichung}
 \todo[inline]{Begründung und Quelle}
