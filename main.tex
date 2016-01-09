@@ -1,4 +1,5 @@
 \documentclass[a4paper, 11pt, oneside, english, german, ngerman]{thesis}
+% TODO: Check twoside book-like formatting and page numbers
 
 \usepackage{fancyhdr}
 \usepackage{eurosym}
@@ -26,6 +27,7 @@
 \usepackage{isomath}
 \usepackage{xfrac}
 \usepackage{cancel}
+\usepackage[binary-units=true]{siunitx}
 
 \usepackage{booktabs}
 
@@ -37,16 +39,25 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{fit}
 
-\usepackage{varioref}
-\usepackage[pdftex]{hyperref}
-\usepackage{cleveref}
-\usepackage[binary-units=true]{siunitx}
-\usepackage{todonotes}
-
 \usepackage[babel]{csquotes}
 \usepackage[backend=biber,style=authoryear]{biblatex}
 
 \usepackage{listings}
+
+\usepackage{varioref}
+\usepackage[pdftex]{hyperref}
+\usepackage{cleveref}
+\usepackage{todonotes}
+
+% fancy headers
+\newcommand{\changefont}{%
+    \fontsize{9}{11}\selectfont
+}
+
+\fancyhead[LE]{\changefont \slshape \rightmark} %section
+\fancyhead[RE]{\changefont \thepage}
+\fancyhead[RO]{\changefont \slshape \leftmark} % chapter
+\fancyhead[LO]{\changefont \thepage}
 
 % color definitions for listings
 \definecolor{bluekeywords}{rgb}{0.13,0.13,1}
@@ -79,6 +90,8 @@
 
 \lstdefinestyle{matlab}{
 	language=matlab,
+	keepspaces=true,
+	columns=flexible,
 	showspaces=false,
 	showtabs=false,
 	breaklines=true,
@@ -205,26 +218,36 @@ Während für einige Methoden der Bildanalyse und des Content-Based Image Retrie
 Eine Grundannahme ist hier, dass bildrelevante Merkmale weniger in Farb-, als in Intensitätsunterschieden zu finden sind, wie sie etwa durch Objektkanten hervorgerufen werden.
 Die Transformation von unabhängigen Farbintensitätskanälen, wie sie aus der additiven (RGB-) oder subtraktiven (CMY-) Farbmischung bekannt sind, auf einen einzigen (idealerweise dekorrelierten) Intensitätskanal führt dabei ebenfalls zu einer Verringerung der notwendigen Verarbeitungszeit und Speicherkapazität, was insbesondere einer Echtzeit-Datenverarbeitung entgegenkommt.
 
-\subsection{Graustufenumwandlung}
+\subsection{Methoden der Graustufenumwandlung}
 \label{subsec:graustufen}
 
 \cite{kanan2012color} weisen darauf hin, dass die exakte Methode der Umwandlung von Farb- in Intensitätswerte oft nicht näher spezifiziert und als irrelevant bezüglich der weiteren Verarbeitung angenommen wird.
 Sie vergleichen daher verschiedene wahrnehmungs- und nicht-wahrnehmungspsychologisch inspirierte Methoden der Konvertierung und überprüfen diese mittels der Extraktion der Featuredeskriptoren \algo{SIFT}, \algo{SURF}, \algo{Geometric Blur} und \algo{Local Binary Patterns} an verschiedenen Bilddatensätzen, u.a. kategorisierten Objekten in Caltech 101 (\cite{fei2007learning,caltech101:online}), Gesichtern des AR Face Dataset (\cite{martinez1998benavente}) und Objekten in variablen Ausleuchtungsszenarien in \cite{barnard2002data}. 
 Hervorzuheben sind hierbei die Methoden \algo{Intensity}, \algo{Gleam}, \algo{Luminance}, \algo{Luma} und \algo{Lightness}, sowie \algo{Luster}.
+
 Der Wertebereich wird als $0 \dots 1$ angenommen, wobei einige der Methoden sich der Gamma-Korrekturfunktion
 %
 \begin{align}
-\Gamma(t) = t^{\sfrac{1}{\gamma}}
+\Gamma(t) = t^{\gamma}
 \end{align}
 %
-mit $\gamma = 2.2$ bedienen.
+mit $\gamma = \sfrac{1}{2.2}$ bedienen.
 Diese Funktion überführt die lineare Farbintensität $t$ in eine nichtlineare, der menschlichen Helligkeitswahrnehmung ähnlicheren Abbildung. \todo{Quelle}
-
-\algo{Intensity} und \algo{Gleam} entsprechen dem regulären und gamma-korrigierten Mittelwert der drei \RGB-Farbkanäle (vgl. \cref{fig:conv_intensity,fig:conv_gleam}):
+Hierbei hellen Werte $\gamma > 1$ das Bild auf (d.h. die Intensitäten werden verstärkt), während Werte $\gamma < 1$ das Bild abdunkeln (vgl. \cref{fig:gammaCorrections}).
+Bei einem Bild $\mat I$ mit gleichverteilten Intensitätswerten (d.h. geringem Kontrast) führt eine Korrektur mit $\gamma = \sfrac{1}{2.2} \approx 0.45$ dabei zu einer mittleren Aufhellung um ca. $\num{19} \pm \SI{9}{\percent}$:
 %
 \begin{align}
-\mat I_{Intensity} &= \frac{1}{3}(\mat R + \mat G + \mat B) \\
-\mat I_{Gleam} &= \frac{1}{3}(\Gamma(\mat R) + \Gamma(\mat G) + \Gamma(\mat B))
+E(\Gamma(\mat I) - \mat I) &= E(\mat I^{\sfrac{1}{2.2}} - \mat I) \approx 0.1866 \\
+\sigma (\Gamma(\mat I) - \mat I) &= \sigma(\mat I^{\sfrac{1}{2.2}} - \mat I) \approx 0.0857
+\end{align}
+%
+Zur schnelleren Verarbeitung von 8-bit-Bildern mit 256 Intensitätsabstufungen pro Kanal kann zur Vermeidung von Fließkommaoperationen eine Lookup-Tabelle verwendet werden, wie sie etwa gemäß \cref{lst:matlab_gamma} erstellt werden kann.
+
+Die Methoden \algo{Intensity} und \algo{Gleam} entsprechen dem regulären und gamma-korrigierten Mittelwert der drei \RGB-Farbkanäle (vgl. \cref{fig:conv_intensity,fig:conv_gleam}):
+%
+\begin{align}
+\mat I_{Intensity} &= \frac{1}{3}(\mat R + \mat G + \mat B) \label{eq:intensity} \\
+\mat I_{Gleam} &= \frac{1}{3}(\Gamma(\mat R) + \Gamma(\mat G) + \Gamma(\mat B)) \label{eq:gleam}
 \end{align}
 
 "`\algo{Luster}"' ist der \textit{Lightness}-Kanal des \HLS-Farbraumes (Hue, Lightness, Saturation) und entspricht dem Mittelwert der minimalen und maximalen \RGB-Kanalintensitäten
@@ -270,10 +293,25 @@ f(t) &= \begin{cases}
 wobei der Wertebereich auf $0 \dots 1$ normiert wurde (vgl. \cref{fig:conv_lightness}).
 Diese Farbräume dekorrelieren Helligkeits- von Farbinformationen, wobei die a\textsuperscript{\tiny *}- und b\textsuperscript{\tiny *}-, bzw. u\textsuperscript{\tiny *}- und v\textsuperscript{\tiny *}-Achsen komplementäre Farbinformationen abbilden (etwa rot-grün und glau-gelb). \todo{Quelle}
 
-\todo[inline]{Gleam ca. 20\% heller}
-\todo[inline]{Gamma-korrigierte Umwandlungen von Vorteil}
-\todo[inline]{beste Kandidaten nennen}
-\todo[inline]{Lightness und wahrnehmungspsychologie völlig egal}
+\subsection{Wahl der Graustufenumwandlungsmethode}
+\label{subsec:graustufen_wahl}
+
+\Citeauthor{kanan2012color} ermitteln, dass die Wahl der der Umwandlungsmethode einen signifikanten Einfluss auf die erreichbaren Genauigkeiten verschiedener Algorithmen zur Merkmalsextraktion in Abhängigkeit von der Art der zu analysierenden Bilder hat.
+Sie zeigen, dass sich gamma-korrigierende Umwandlungsverfahren wie \algo{Gleam} (oder ein nachträglich korrigiertes \algo{Intensity}) gegenüber allen nicht-gammakorrigierenden Verfahren wie \algo{Intensity}, \algo{Luster}, \algo{Luminance} etc. durchsetzen.
+Hierbei ist die Methode \algo{Gleam} der beste Kandidat für Gesichts- und Objekterkennung, wobei eine gammakorrigierte Form von \algo{Luminance} bei Texturerkennungen hervorsticht.
+Sie empfehlen ferner, jede Form von \algo{Value} (auch in Algorithmen zur Farbmerkmalsextraktion) durch \algo{Gleam} zu ersetzen.
+Methoden, die sich geräteunabhängiger Farbräume und wahrnehmungspsychologischer Einflüsse bedienen, wie es bei \algo{Lightness} (\LAB, \LUV) der Fall ist, zeigen indes keinen besonderen Vorteil auf.
+
+Die Entwicklung eines angepassten Umwandlungsalgorithmus
+%
+\begin{align}
+\mat I_{opt} &=  \frac{1}{3}(\mat R^\frac{1}{a} + \mat G^\frac{1}{b} + \mat B^\frac{1}{b}) \label{eq:convert_opt}
+\end{align}
+%
+mittels Optimierung der Parameter $a, b, c > 0$ speziell für gradienten- und kantenbasierte Detektoren (wie \algo{SIFT} und \algo{SURF}) wird vorgeschlagen.
+
+
+\todo[inline]{Hinweis auf Vorteile von SIFT ggü. SURF}
 
 \begin{figure}
 	\centering
@@ -327,6 +365,46 @@ Diese Farbräume dekorrelieren Helligkeits- von Farbinformationen, wobei die a\t
 
     \caption{Vergleich verschiedener Konvertierungen von Farb- zu Grauwerten}
     \caption*{Vergleich der in \cref{subsec:graustufen} beschriebenen Konvertierungen der \RGB-Farbkanäl von \cref{fig:conv_rgb} in Intensitätswerte.}
+\end{figure}
+
+\begin{lstlisting}[style=matlab,caption={Generieren einer Gamma-Lookuptabelle in Matlab}, label=lst:matlab_gamma]
+gamma            = 1/2.2;
+input_values     = 0:1:255;
+correction_table = cast( 255*(input_values/255).^gamma, 'uint8')
+\end{lstlisting}
+
+\begin{figure}
+	\centering
+	
+\begin{tikzpicture}[
+	scale=1, 
+	y=5cm,
+	declare function={gamma(\t,\y)=\t^\y;}
+	]
+    
+	\begin{axis}[
+		grid=both,
+    	axis lines=left,
+	    enlargelimits=upper,
+	    samples=100,
+	    domain=0:1,
+	    xmax = 1,
+	    ymax = 1,
+	    xlabel={$x$},
+		ylabel={$\Gamma(x) = x^\gamma$},
+	    legend pos=north west,
+	    legend entries={$\gamma=\sfrac{1}{2.2}$, $\gamma=1.0$, $\gamma=2.2$}
+		]
+
+	\addplot [dotted, thick,smooth,red] {gamma(x,1/2.2)};
+	\addplot [smooth, samples=10] {gamma(x,1.0)};	
+	\addplot [dashed,smooth,blue] {gamma(x,2.2)};	
+		
+	\end{axis}
+    
+\end{tikzpicture}
+	\caption{Gamma-Korrekturfunktionen verschiedener $\gamma$}
+	\label{fig:gammaCorrections}
 \end{figure}
 
 \section{Normalisierung der Intensitäten}
