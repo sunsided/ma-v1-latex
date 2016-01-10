@@ -514,6 +514,48 @@ Diese Vorgehensweise führt in diesem Beispiel folglich zu einer Verdoppelung de
 Wird statt der längsten Kante die kürzeste Kante normiert, ist die nutzbare resultierende Bildfläche um so höher, jedoch auch der zur Verarbeitung notwendige Rechenaufwand.
 \Cref{tab:vorverDimensionen} verdeutlicht die Dimensionen und prozentualen Unterschiede.
 
+Eines der Probleme bei der beschriebenen Vorgehensweise ist der Umstand, dass die kürzeste Kante kleiner als die gewünschte Normlänge, die längste Kante jedoch signifikant größer als diese sein kann.
+Um solchen Fällen zu begegnen, werden daher die Kanten nicht direkt, sondern indirekt über die Bildfläche normiert.
+Mit den Definitionen des Aspektverhältnisses $\alpha$ und der Bildfläche $F$ als
+%
+\begin{align}
+\alpha &= \frac{N}{M} \\
+F &= N \cdot M \label{eq:fläche}
+\end{align}
+%
+sowie einer Zielfäche $F' = N' \cdot M'$ zu den normierten Kantenlängen $N', M'$ lassen sich mittels
+%
+\begin{align}
+\frac{N'}{M'} &= \frac{N}{M} = \alpha \label{eq:nm_alpha} \\
+N' \cdot M' &= N \cdot M \cdot \left( \frac{F'}{F} \right) \label{eq:nm_area}
+\end{align}
+%
+über \cref{eq:fläche,eq:nm_alpha} in \cref{eq:nm_area} mit
+%
+\begin{align}
+N' \cdot \left( \frac{N'}{\alpha} \right) = \frac{1}{\alpha} (N')^2 &= \cancel{F} \cdot \left( \frac{F'}{\cancel{F}} \right)
+\end{align}
+%
+die normierten Kantenlängen $N'$ und $M'$ ermitteln als
+%
+\begin{align}
+N' &= \sqrt{F' \cdot \alpha} \\
+M' &= \frac{N'}{\alpha}
+\end{align}
+
+Durch dieses Verfahren lässt sich eine Obergrenze des Speicherbedarfes für die Bilddaten festlegen, wobei -- ausnehmlich Bildern mit $F < F'$ -- eine definierte Menge an Nutzdaten für die Weiterverarbeitung vorliegt.
+Beispiel $P_5$ in \cref{tab:vorverDimensionen} demonstriert dieses Vorgehen, \cref{lst:matlab_simult_scale} zeigt eine Implementierung in MATLAB.
+
+\begin{lstlisting}[style=matlab,caption={Simultane Skalierung der Bilddimensionen auf eine fixe Zielfläche}, label=lst:matlab_simult_scale]
+w          = 1009;  % Bildbreite N
+h          = 514;   % Bildhöhe M
+targetArea = 512^2; % gewünschte Zielfläche
+
+aspectRatio = w/h;
+w2 = sqrt(targetArea*aspectRatio)
+h2 = w2/aspectRatio
+\end{lstlisting}
+
 \begin{table}
 	\centering
 	\begin{tabular}{lrrrr}
@@ -531,14 +573,18 @@ Wird statt der längsten Kante die kürzeste Kante normiert, ist die nutzbare re
 		\midrule
 		$G_3 = P_3$ & \textbf{\SI{512}{\px}} & \SI{261}{\px} & \SI{133632}{\px} & \SI{7.68}{\percent} \\
 		$G_4 = P_4$ & \SI{1005}{\px} & \textbf{\SI{512}{\px}} & \SI{514560}{\px} & \SI{29.57}{\percent} \\
+		\midrule
+		$P_5$ & \textbf{\SI{718}{\px}} & \textbf{\SI{365}{\px}} & \SI{262070}{\px} & \SI{15.06}{\percent} \\
 		\bottomrule
 	\end{tabular}
 	\caption{Vorverarbeitung: Bilddimensionen im Vergleich}
-	\caption*{$G_0, P_0$: Bereich des Gesamtbildes $G$ und Produktbildes $P$ in den ursprünglichen Dimensionen; $G_1, P_1$: Bereiche nach Verkleinerung der längsten Kante des Bildes $G$ auf \SI{512}{px}; $G_2, P_2$: Bereiche nach Verkleinerung der kürzesten Kante des Bildes $G$ auf \SI{512}{px}; $G_3, P_3$: Bereiche nach Entfernung der bildunwichtigen Randteile in $G$, gefolgt von Reduktion der längsten Kante auf \SI{512}{\px}; $G_4, P_4$: Analog $G_3, P_3$, jedoch Reduktion der kürzesten Kante auf \SI{512}{\px}.}
+	\caption*{$G_0, P_0$: Bereich des Gesamtbildes $G$ und Produktbildes $P$ in den ursprünglichen Dimensionen; $G_1, P_1$: Bereiche nach Verkleinerung der längsten Kante des Bildes $G$ auf \SI{512}{px}; $G_2, P_2$: Bereiche nach Verkleinerung der kürzesten Kante des Bildes $G$ auf \SI{512}{px}; $G_3, P_3$: Bereiche nach Entfernung der bildunwichtigen Randteile in $G$, gefolgt von Reduktion der längsten Kante auf \SI{512}{\px}; $G_4, P_4$: Analog $G_3, P_3$, jedoch Reduktion der kürzesten Kante auf \SI{512}{\px}; $P_5$: Bestmögliche simultane Anpassung von Breite und Höhe auf eine Fläche von $F \approx \num{512}^2 \si{\px} = \SI{262144}{\px}$.}
 	\label{tab:vorverDimensionen}
 \end{table}
 
 \section{Energiebasiertes Retargeting}
+
+\todo[inline]{Auswertung des Beschnittbereiches über die erste Ableitung erlaubt es, einen adaptiven Threshold über die Bilddaten zu fahren; Farbverläufe -- ohnehin kein gutes Feature -- werden nicht als relevantes Merkmal erkannt und beschnitten. Dies beugt Belichtungsfehlern vor.}
 
 Bildretargeting befasst sich mit der Aufgabe, ein Bild fester Dimension auf Zielen mit vom Bild unterschiedlicher oder generell variabler Dimension darzustellen, wie es etwa im Rahmen von responsive designs von Webseiten \todo{erklären} oder bei Smartphones beim Wechsel von vertikaler Lage ("`portrait mode"') zu horizontaler Lage ("`landscape mode"') notwendig wird.
 %
@@ -784,13 +830,13 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
     \end{subfigure}    
     \quad
     \begin{subfigure}[b]{0.25\textwidth}
-        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-energy}
+        \includegraphics[width=\textwidth]{E559256E6CEA31B79B411104084DF35F9370B147FA3E9BF668FD2FE07367702D-energy-norm}
         \caption{$|\Delta_x \mat I| + |\Delta_y \mat I|$}
         \label{fig:mascaraEnergy}
     \end{subfigure}     
            
     \caption{\Cref{fig:mascara} gefiltert mit Sobel-Operator, Energiebild}
-    \caption*{Anwendung der Sobel-Operatoren aus \cref{eq:sobel3x,eq:sobel3y} in X- und Y-Richtung auf \cref{fig:mascara}, sowie Energiebild gemäß \cref{eq:sobelEnergy}.
+    \caption*{Anwendung der Sobel-Operatoren aus \cref{eq:sobel3x,eq:sobel3y} in X- und Y-Richtung auf \cref{fig:mascara}, sowie Energiebild gemäß \cref{eq:sobelEnergy} (normalisiert für Darstellung).
     Normierung auf Wertebereich $0 \dots 255$ analog \cref{fig:sobelGlasses}.}
     \label{fig:sobelMascara}
 \end{figure}
