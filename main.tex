@@ -874,6 +874,12 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 \cite[395]{corke2011robotics} beschreibt \algo{RANSAC} in MATLAB.
 \cite[373]{corke2011robotics} beschreibt Featureextraktion.
 
+\cite{87c32622126d4fc1a7cb3bcca3ecd7d4} beschreiben eine Methode zum Bewerten/Gewichten/Ranking der gefundenen Features durch eine mehrfache (Re-)Detektion bei synthetisch modifizierten Bildern - d.h. Modifikation der Belichtung (z.B. Gamma), der Rotation, der Skalierung, etc.; diejenigen Feature, die in allen oder möglichst vielen Variationen wiedergefunden werden, werden höher bewertet als der Rest.
+
+\cite[176]{sonka2008image} erklären Werte in Entfernung von $3\sigma$ vom Mittelpunkt des Gauss-Kernels als zu vernachlässigen ($\mu \pm 3\sigma \approx \SI{99.7}{\percent}$ der Werte der Standardnormalverteilung)
+
+\url{http://www.crisluengo.net/index.php/archives/22}: "`Meaning that by convolving an image repeatedly with a uniform filter we can approximate a Gaussian filter. It also means that convolving an image twice with a Gaussian filter yields an image filtered with a larger Gaussian filter. The size parameter $\sigma$ of this resulting larger Gaussian filter can be computed by quadratically adding the $\sigma$s of the applied filters: $\sigma_{total} = \sqrt{\sigma^2_1+\sigma^2_2}$. So when repeatedly convolving an image with the same Gaussian, we effectively increase the $\sigma$ with a factor $\sqrt{2}$ with every convolution."'
+
 \chapter{Leerer Abschnitt}
 
 \clearpage
