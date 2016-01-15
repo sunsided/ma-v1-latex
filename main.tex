@@ -874,7 +874,7 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 \cite{yin2013content} beschreiben Content-Based Image Retrieval mittels Apache Hadoop auf Basis von \algo{SURF}-Deskriptoren und "`Locality-Sensitive Hashing"'.
 
-\cite{lowe2004distinctive} ist das Original-Paper von Lowe zu \algo{SIFT}. Er merkt an, dass verschiedene Detektoren wie z.B. der Harris-Kantendetektor stark auf Bildskalierungen reagieren und demnach ungeeignet sind.
+\cite{lowe1999recognition,lowe2004distinctive} sind die Original-Paper von Lowe zu \algo{SIFT}. Er merkt an, dass verschiedene Detektoren wie z.B. der Harris-Kantendetektor stark auf Bildskalierungen reagieren und demnach ungeeignet sind.
 
 \cite{ginesu2012objective} vergleichen \algo{WebP} mit bestehenden Bildformaten wie \algo{JPEG} und \algo{PNG}.
 
@@ -913,7 +913,7 @@ Bei der Faltung zweier Gaußfunktionen unterschiedlicher Standardabweichungen $\
 Konkret bedeutet \cref{eq:convolution_twosigma_sqrt}, dass die wiederholte Anwendung desselben Gaußoperators auf ein Bild identisch ist mit der direkten Anwendung eines mit $\sigma' = \sqrt{2}\sigma$ "`breiteren"' Operators auf das Ursprungsbild, wobei sich das exponentielle Wachstum in $k^p\sigma_1$ als negativ herausstellt.
 
 Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Operators vernachlässigt werden (vgl. \cite[176]{sonka2008image}); um jedoch einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, wählt etwa \cite{Nguyen:2007:GG:1407436} eine entsprechende Filterbreite von $\floor*{3\sigma}$ je Dimension%
-\footnote{Für das Ermitteln einer ungeraden Filtergröße kann der Wert $2\floor*{\frac{3\sigma}{2}}+1$ verwendet werden.}.
+\footnote{Für das Ermitteln einer ungeraden Filtergröße kann der Wert $2\floor*{\frac{3\sigma}{2}}+1$ verwendet werden.}, \cite{lowe1999recognition} wählt einen Kern der Breite $7$ (d.h. einen Radius von drei Werten in jede Richtung).
 Diese Abhängigkeit der Filtergröße von seiner Parametrierung führt nun trotz Ausnutzung der Separierbarkeit im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand.
 
 Abhilfe schafft es, anstatt der Filterung
