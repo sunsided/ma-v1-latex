@@ -25,6 +25,7 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{isomath}
+\usepackage{mathtools}
 \usepackage{xfrac}
 \usepackage{cancel}
 \usepackage[binary-units=true]{siunitx}
@@ -155,6 +156,9 @@
 \newcommand{\thetavec}{\ensuremath{\vec{\theta}}}
 \newcommand{\order}[1]{\ensuremath{\mathcal{O}(#1)}}
 \newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
+
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
 % "SI" units
 \sisetup{detect-weight=true, detect-family=true}
@@ -768,6 +772,7 @@ Da die Faltung nicht nur kommutativ, sondern auch assoziativ ist -- $(\fun f \as
 %
 Die Faltung der Matrix $\mat I$ mit einem separierbaren Filter $\mat G = \vec g^T \ast \vec h$ ist folglich identisch mit der Faltung der Matrix $\mat I$ mit dem Vektor $\vec g^T$, gefolgt von der Faltung des Ergebnisses mit dem Vektor $\mat h$.
 
+\label{conv2d_mnpq} 
 Die Faltung einer $M \times N$-Matrix (z.B. eines Grauwertbildes) mit einem $P \times Q$-Filterkern benötigt bei einfacher Implementierung%
 \footnote{Die Faltung entspricht der Multiplikation der fouriertransformierten, weswegen es effizient sein kann, die Faltung vollständig im Fourierraum durchzuführen.}
 $M \times N \times P \times Q$ Multiplikationen und Additionen (jeder Wert der Matrix muss mit jedem Wert des Kernes multipliziert werden). 
@@ -876,11 +881,75 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 \cite{87c32622126d4fc1a7cb3bcca3ecd7d4} beschreiben eine Methode zum Bewerten/Gewichten/Ranking der gefundenen Features durch eine mehrfache (Re-)Detektion bei synthetisch modifizierten Bildern - d.h. Modifikation der Belichtung (z.B. Gamma), der Rotation, der Skalierung, etc.; diejenigen Feature, die in allen oder möglichst vielen Variationen wiedergefunden werden, werden höher bewertet als der Rest.
 
-\cite[176]{sonka2008image} erklären Werte in Entfernung von $3\sigma$ vom Mittelpunkt des Gauss-Kernels als zu vernachlässigen ($\mu \pm 3\sigma \approx \SI{99.7}{\percent}$ der Werte der Standardnormalverteilung)
-
 \url{http://www.crisluengo.net/index.php/archives/22}: "`Meaning that by convolving an image repeatedly with a uniform filter we can approximate a Gaussian filter. It also means that convolving an image twice with a Gaussian filter yields an image filtered with a larger Gaussian filter. The size parameter $\sigma$ of this resulting larger Gaussian filter can be computed by quadratically adding the $\sigma$s of the applied filters: $\sigma_{total} = \sqrt{\sigma^2_1+\sigma^2_2}$. So when repeatedly convolving an image with the same Gaussian, we effectively increase the $\sigma$ with a factor $\sqrt{2}$ with every convolution."'
 
-\chapter{Leerer Abschnitt}
+\url{http://www.nowozin.net/sebastian/tu-berlin-2006/autopano-sift/technicaldetails.html} verweist auf \algo{Best Bin First} nearest neighbor-Suche in \texttt{autopano-sift}.
+
+\cite[319ff]{das2015guide} beschreibt hübsch, aber nicht sehr hilfreich \algo{SIFT}.
+
+\cite{DBLP:conf/isvc/BelaroussiM08a} beschreiben als "`Image-Based Information Guide on Mobile Devices"' u.a. ein ggü. \algo{RANSAC} verbessertes Matching.
+
+\cite[328ff]{DBLP:conf/isvc/HeW08} beschreiben als "`A Fast and Effective Dichotomy Based Hash Algorithm for Image Matching"' eine schnellere Alternative zum \algo{Best-Bin-First KNN} für \algo{SIFT}.
+
+\chapter{Scale-Invariant Feature Transform}
+
+\section{Laplacian of Gaussian und Difference of Gaussian}
+
+\todo[inline]{auch über LoG und DoG schreiben ...}
+
+% \url{http://www.nowozin.net/sebastian/tu-berlin-2006/libsift/} Sebastian Nomozin macht es in der Beschreibung seines Codes falsch
+
+Eine Besonderheit der der Gaußfunktion $\fun g(x | \mu, \sigma)$ ist, dass sowohl ihr Produkt, als auch ihre Faltung wieder eine Gaußfunktion ergeben\todo{Quelle}.
+Bei der Faltung zweier Gaußfunktionen unterschiedlicher Standardabweichungen $\sigma_a, \sigma_b$ gilt bezüglich der Standardabweichung $\sigma_c$ des Ergebnisses
+%
+\begin{align}
+\fun g(x | \sigma_c) &= \fun g(x | \sigma_a ) \ast \fun g(x |  \sigma_b ) \label{eq:convolution_twosigma} \\
+\sigma_c &= \sqrt{ (\sigma_a )^2 + ( \sigma_b )^2 } \label{eq:convolution_twosigma_sqrt} 
+\end{align}
+\todo{Ziehen aus zwei Normalverteilungen}
+
+Konkret bedeutet \cref{eq:convolution_twosigma_sqrt}, dass die wiederholte Anwendung desselben Gaußoperators auf ein Bild identisch ist mit der direkten Anwendung eines mit $\sigma' = \sqrt{2}\sigma$ "`breiteren"' Operators auf das Ursprungsbild, wobei sich das exponentielle Wachstum in $k^p\sigma_1$ als negativ herausstellt.
+
+Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Operators vernachlässigt werden (vgl. \cite[176]{sonka2008image}); um jedoch einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, wählt etwa \cite{Nguyen:2007:GG:1407436} eine entsprechende Filterbreite von $\floor*{3\sigma}$ je Dimension%
+\footnote{Für das Ermitteln einer ungeraden Filtergröße kann der Wert $2\floor*{\frac{3\sigma}{2}}+1$ verwendet werden.}.
+Diese Abhängigkeit der Filtergröße von seiner Parametrierung führt nun trotz Ausnutzung der Separierbarkeit im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand.
+
+Abhilfe schafft es, anstatt der Filterung
+%
+\begin{align}
+\mat H_p &= \mat G_{Gauss}(k^p \, \sigma) \ast \mat I
+\end{align}
+%
+rekursiv vorzugehen, wobei analog \cref{eq:convolution_twosigma_sqrt} die folgende Annahme aufgestellt wird:
+%
+\begin{align}
+\sigma_{p+1} &= \sqrt{ (\sigma' )^2 + ( \sigma_{p} )^2 } \label{eq:sift_convolution_twosigma_sqrt} 
+\end{align}
+%
+Über die Identität
+%
+\begin{align}
+\begin{split}
+\sigma_{p+1} &= k^p \, \sigma_1 \\ 
+			 &= k \left( k^{p-1} \sigma_1 \right) \\		 
+			 &= k \, \sigma_p \\
+\end{split}
+\end{align}
+%
+ergibt sich gemäß \cref{eq:sift_convolution_twosigma_sqrt} der Zusammenhang
+%
+\begin{align}
+k \sigma_1 &= \sqrt{ (\sigma' )^2 + ( \sigma_1 )^2 } \\
+% k^2 \sigma^2_1 &= (\sigma')^2 + \sigma^2_1 \\
+% \sigma^2_1 ( k^2 - 1) &= (\sigma')^2 \\
+\sigma' &= \sigma_1 \sqrt{ k^2 - 1 }
+\end{align}
+%
+wodurch es möglich wird, die Bilder mit einem deterministischen Kern fester Größe rekursiv zu filtern, so dass
+%
+\begin{align}
+\mat H_{p+1} &= \mat G_{Gauss}(\sigma') \ast \mat H_p
+\end{align}
 
 \clearpage
 \pagenumbering{Roman}
