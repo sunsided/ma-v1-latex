@@ -426,12 +426,14 @@ Bei einer naiven Implementierung wird mit einer eine Doppelschleife über das Bi
 Hierbei muss bedacht werden, dass ein Überlauf der Summenvariablen stattfinden kann; dass dies  bei geeigneter Wahl der Datentypen unwahrscheinlich ist, zeigt folgende Betrachtung:
 
 Bei einem Bild mit 8 Bit Farbtiefe je Pixel (d.h. Wertebereich $0 \dots 255$ pro Kanal) ist die maximal erreichbare Summe $M \times N \times 255$.
-Bei einem Bild mit \SI{4}{\mega\px} (z.B. $\num{2000} \times \SI{2000}{\px}$) entspricht dies dem Wert $\num{4000000} \times 255 = \num{1020000000}$, d.h. ca. 1 Milliarde.
+Bei einem Bild mit \SI{4}{\mega\px} (z.B. $\num{2000} \times \SI{2000}{\px}$) entspricht dies dem Wert $\num{4000000} \times 255 = \num{1020000000}$.
 
-Ein vorzeichenfreier 32-Bit-Datentyp (\datatype{unsigned int}) bildet jedoch bereits den Wertebereich $2^0 \dots 2^{32} = 0 \dots \num{4294967295}$ ab; das heißt, die maximale kumulative Intensität beträgt in diesem Fall ca. 4,3 Milliarden. 
-Unter der Annahme einer vollen Aussteuerung (d.h. jedes Pixel desselben Kanals hat die Intensität $255$) ist der Wertebereich für Bilder bis $\sfrac{2^{32}}{255} \approx \SI{16843009}{\mega\px}$ abgedeckt; dies entspricht ungefähr einem Bild der Dimension $\num{4104} \times \SI{4104}{\px}$.
-Bei Verwendung eines vorzeichenfreien 64-Bit-Datentyps (\datatype{unsigned long}) beträgt der maximale Wert bereits $2^{64} = \num{18446744073709551616}$, d.h. 18 Trillionen, und entspräche bei gleichen Bedingungen 72 Billiarden Pixeln -- etwa einem Bild der Dimension $\num{268961285} \times \SI{268961285}{\px}$ und einem Speicherbedarf von ca. $\SI{72340172}{\gibi\byte}$ pro Kanal.
-Da heutige Prozessorarchitekturen \todo{Beispiele} auf die Verarbeitung von 64-Bit-Typen spezialisiert sind, ist ein solcher eine geeignete Wahl für eine derartige naive Implementierung.
+Ein vorzeichenfreier 32-Bit-Datentyp (\datatype{unsigned int}) bildet jedoch bereits den Wertebereich $2^0 \dots 2^{32} = 0 \dots \num{4294967295}$ ab; das heißt, die maximale kumulative Intensität ist in diesem Fall ca. 3,3 Milliarden höher. 
+Unter der Annahme einer vollen Aussteuerung (d.h. jedes Pixel desselben Kanals hat die Intensität $255$) ist der Wertebereich für Bilder bis $\sfrac{2^{32}}{255} \approx \SI{16843009}{\px}$ abgedeckt; dies entspricht ungefähr einem Bild der Dimension $\num{4104} \times \SI{4104}{\px}$.
+Bei Verwendung eines vorzeichenfreien 64-Bit-Datentyps (\datatype{unsigned long}) beträgt der maximale Wert bereits
+% $2^{64} = \num{18446744073709551616}$, d.h. 
+ca. 18 Trillionen und entspräche bei gleichen Bedingungen 72 Billiarden Pixeln -- etwa einem Bild der Dimension $\num{268961285} \times \SI{268961285}{\px}$ und einem Speicherbedarf von ca. $\SI{72340172}{\gibi\byte}$ pro Kanal, wodurch sich die Überlaufproblematik erübrigt.
+%Da heutige Prozessorarchitekturen \todo{Beispiele} auf die Verarbeitung von 64-Bit-Typen spezialisiert sind, ist ein solcher eine geeignete Wahl für eine derartige naive Implementierung.
 
 \todo[inline]{Übergang zur Berechnung der (Stichproben-)Varianz (benötigt Erwartungs- oder Mittelwert) und Begründung für zweiphasige Berechnung, da Sobel-Operator.}
 \todo[inline]{Beschreibung der on-line-Berechnung von Mittelwert und Standardabweichung}
