@@ -1,23 +1,33 @@
-\documentclass[a4paper, 11pt, oneside, english, german, ngerman]{thesis}
+\documentclass[a4paper, 11pt, oneside, ngerman]{thesis}
 % TODO: Check twoside book-like formatting and page numbers
+
+\usepackage[english,ngerman]{babel}
+
+% thesis class
+\renewcommand\figureshortname{Abb.}
+\renewcommand\tableshortname{Tab.}
+
+\usepackage[mode=buildnew]{standalone}
+
+%\usepackage[miktex]{gnuplottex}
 
 \usepackage{fancyhdr}
 \usepackage{eurosym}
 \usepackage{geometry}
 \usepackage{lipsum}
 \usepackage{graphicx}
+\usepackage{lmodern}
+\usepackage{wrapfig}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
+\usepackage{xspace}
+
 \usepackage[figurewithin=section, 
 		   font=small, 
 		   labelfont=bf]
 		   {caption}
 \usepackage{subcaption}
-\usepackage{wrapfig}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{inconsolata}
-\usepackage{lmodern}
-\usepackage[english,german,ngerman]{babel}
-\usepackage{xspace}
 
 \usepackage[super]{nth}
 \usepackage{makeidx}
@@ -34,7 +44,7 @@
 
 \usepackage{xcolor}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.11}
+\pgfplotsset{compat=1.13}
 
 \usepackage{tikz}
 \usetikzlibrary{calc}
@@ -896,6 +906,29 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 \url{https://homepages.cae.wisc.edu/~ece533/images/} Public-Domain Test Images for Homeworks and Projects: Lena und Barbara (Aliasing!)
 
 \url{http://dsp.stackexchange.com/questions/28312} Eigene Frage zu $\sigma=0.5$ bezüglich \cite{lowe2004distinctive}.
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/laplacian-of-gaussian}
+		\caption{LoG: Erste und zweite Ableitung einer Gaußfunktion mit $\mu=0, \sigma=1.6$.}
+	\end{subfigure}	
+
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/difference-of-gaussian}
+		\caption{DoG: Differenz zweier Gaußfunktionen $g(x)$ mit $\mu=0$ und  unterschiedlichem $\sigma$ im Verhältnis $1:1.6$.}
+	\end{subfigure}
+	
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/log-dog-error}
+		\caption{Fehler der DoG-Approximation bei $\sigma$-Verhältnissen von $1:1.6$ ($\sigma_{D}=1.0$), $1:1.3$ ($\sigma_{D}=1.2$) und $1:1.23$ ($\sigma_{D}=1.3$).}
+	\end{subfigure}
+	
+	\caption{Laplacian-of-Gaussian (LoG) und Difference-of-Gaussian (DoG)}
+\end{figure}
 
 \chapter{Scale-Invariant Feature Transform}
 

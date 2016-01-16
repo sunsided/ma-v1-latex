@@ -1,0 +1,73 @@
+\documentclass[crop,tikz]{standalone}
+
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[margin=0cm,nohead]{geometry}
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{calc}
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\begin{tikzpicture}
+	\begin{axis}[
+		scale=1.5,
+		y=4cm,
+		%legend style={legend pos=north east,font=\tiny},
+		ymin=-0.3, ymax=0.5,
+		ytick pos=left,
+		xtick pos=left,
+		xlabel = {$x$},
+		every outer x axis line/.append style=
+			{-stealth},
+		every outer y axis line/.append style=
+			{-stealth},
+	]
+			
+	\addplot[id=Gauss1,
+			dashed,
+			red,
+			samples=100,
+			domain=-15:15] 
+		gnuplot{
+			  1/(1.6*sqrt(2*pi))*exp(-(x**2)/(2*1.6**2))
+			};
+
+	\addplot[
+			id=DiffGauss1,	
+			dotted,
+			blue,
+			samples=100,
+			domain=-15:15] 
+		gnuplot{
+			  1/(sqrt(2*pi)*1.6**3) * (x)*exp(-(x**2)/(2*1.6**2))
+			};
+			
+	\addplot[
+			id=Diff2Gauss1,	
+			black,
+			samples=100,
+			domain=-15:15] 
+		gnuplot{
+			  (
+			  	(x)**2 * exp(-(x)**2/(2*1.6**2)) / (1.6**4)
+			  	       - exp(-(x)**2/(2*1.6**2)) / (1.6**2)
+			  )
+			  / (sqrt(2*pi)*1.6)
+			};
+		  
+	\legend{
+		$g(x|\sigma=1.6)$,
+		$\frac{\partial}{\partial x} g(x|\sigma=1.6)$,
+		$\frac{\partial^2}{\partial x^2} g(x|\sigma=1.6)$}
+	  
+	\end{axis}
+\end{tikzpicture}
+\end{document}
