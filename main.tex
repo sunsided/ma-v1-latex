@@ -151,11 +151,13 @@
 \newcommand{\imgfile}[1]{\texttt{#1}}
 \newcommand{\engl}[1]{engl.: \textit{#1}}
 
-\newcommand{\LAB}{L\textsuperscript{\tiny *}a\textsuperscript{\tiny *}b\textsuperscript{\tiny *}}
-\newcommand{\LUV}{L\textsuperscript{\tiny *}u\textsuperscript{\tiny *}v\textsuperscript{\tiny *}}
-\newcommand{\RGB}{RGB}
-\newcommand{\HLS}{HLS}
-\newcommand{\HSV}{HSV}
+\newcommand{\LAB}{L\textsuperscript{\tiny *}a\textsuperscript{\tiny *}b\textsuperscript{\tiny *}\index{Lab}}
+\newcommand{\LUV}{L\textsuperscript{\tiny *}u\textsuperscript{\tiny *}v\textsuperscript{\tiny *}\index{Luv}}
+\newcommand{\RGB}{RGB\index{RGB}}
+\newcommand{\HLS}{HLS\index{HLS}}
+\newcommand{\HSV}{HSV\index{HSV}}
+
+\newcommand{\MATLAB}{MATLAB\index{MATLAB}}
 
 % math commands
 \renewcommand{\vec}{\vectorsym}
@@ -993,7 +995,7 @@ k^{p+1}\sigma_1 &= \sqrt{ \sigma^2 + \parens{k^p\sigma_0}^2 } \\
 wodurch sich für alle $k=1$ (d.h. ein Vervielfachen der Standardabweichung um $1$ in jedem Schritt) wie erwartet die Identität mit $\sigma=0$ ergibt, 
 sowie für alle $1<k<\sqrt{2}$ eine Reduktion der notwendigen Standardabweichung erreicht wird.
 Die Funktion $\sqrt{k^2+1}$ erreicht bei $k=\sqrt{2}$ den Wert $1$,
-wodurch für höhere $k$ entsprechend größere Filter benötigt werden. Eine Beispielimplementierung in MATLAB findet sich in \cref{lst:matlab_scalespace_sigma}.
+wodurch für höhere $k$ entsprechend größere Filter benötigt werden. Eine Beispielimplementierung in \MATLAB findet sich in \cref{lst:matlab_scalespace_sigma}.
 \Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $s$ als
 %
 \begin{align}
