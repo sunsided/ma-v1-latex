@@ -953,12 +953,13 @@ beschränkt \algo{SIFT} sich auf die Erkennung lokaler Merkmale\footnote{Klassis
 dass Detektoren, die ausschließlich auf Ecken- und Kanteninformationen basieren -- wie etwa der Moravec- oder Harris-Operator -- nicht invariant gegenüber Skalierungen des Bildes sind 
 und somit in keiner stabilen Merkmalserkennung bei etwa aus unterschiedlichen Distanzen aufgenommenen Bildern desselben Objektes resultieren.
 Er führt daher die Merkmalserkennung nicht auf den Bilddaten selbst, sondern innerhalb des sog. Skalenraums aus.
-\Cite{Witkin:1983:SF:1623516.1623607,1172729} definiert den Skalenraum (engl. \textit{Scale-Space}) eines Signals $f(z)$ als die Menge der Faltungen des Signals mit einem anisotropen Skalierungsoperator $g(z,\sigma)$ über alle Skalierung $\sigma$ als
+\Cite{Witkin:1983:SF:1623516.1623607,1172729} definiert den Skalenraum (engl. \textit{Scale-Space}) eines Signals $f(z)$ als die Menge der Faltungen des Signals mit einem isotropen (richtungsinvarianten) Skalierungsoperator $g(z,\sigma)$ über alle Skalierung $\sigma$ als
 %
 \begin{align}
 \phi(x,y,\sigma) &= \fun f(x,y,\sigma) \ast \fun g(x,y,\sigma) \label{eq:scale-space}
 \end{align}
 %
+wobei jede Skale $\sigma$ im weitesten Sinne einem entsprechendem Betrachtungsabstand des abgebildeten Objektes entspricht.
 Er wählt für diesen Operator die Gaußfunktion\footnote{Der Gaußoperator ist die Wahrscheinlichkeitsdichtefunktion der Normalverteilung.} für mittelwertfreie Signale mit einheitlicher Standardabweichung (d.h. Skale) in den räumlichen Dimensionen
 %
 \begin{align}
@@ -995,10 +996,10 @@ Die in $\Phi[x,y,\sigma]$ gefundenen \algo{SIFT}-Merkmale sind somit prinzipbedi
 	\label{fig:scalespace_contours}
 \end{figure}
 
-\section{Laplacian of Gaussian und Difference of Gaussian}
+\section{Laplacian of Gaussian als Difference of Gaussian}
 
 Die Extremadetektion im Skalenraum basiert nach wie vor auf einer Kantendetektion, bei welcher der Laplace-Operator (d.h. die zweite Ableitung des Bildes) zur Detektion der Kantenpositionen verwendet wird.
-Dieser ist aufgrund seiner Isotropie (Richtungsinvarianz) einer gerichteter Ableitung, 
+Dieser ist aufgrund seiner Isotropie  einer gerichteter Ableitung, 
 wie sie etwa durch den Sobel-Operator (vgl. \cref{eq:gradient}) erreicht wird, vorzuziehen. 
 Wenngleich die zweifache Differenzierung prinzipbedingt überlagernde Störsignale\todo{Faktor} erneut gegenüber einem einfach differenzierendem Operator verstärkt,
 wird dieser Sachverhalt durch die bereits erfolgte Glättung mittels des Gaußoperators gemildert.
@@ -1049,17 +1050,26 @@ Es gilt:
 \end{align}
 %
 mit $k>1$, wobei für eine gute Approximation üblicherweise $k \approx 1.6$ angenommen wird (vgl. \cite{corke2011robotics}).
-\Citeauthor{lowe1999recognition} kommt experimentell zu dem Schluss, dass die (analytisch) exakte Wahl von $k$ für die Lokalisierung der Merkmale und damit die Stabilität der Erkennung nur eine untergeordnete Rolle spielt. \Cref{{fig:log-vs-dog}} zeigt einen Vergleich der beiden Verfahren.
+\Citeauthor{lowe1999recognition} kommt experimentell zu dem Schluss, dass die (analytisch) exakte Wahl von $k$ für die Lokalisierung der Merkmale und damit die Stabilität der Erkennung nur eine untergeordnete Rolle spielt. \Cref{fig:log-vs-dog} zeigt einen Vergleich der beiden Verfahren.
 
-\subsection{Berechnung des Skalenraumes}
+\section{Berechnung des Skalenraumes}
 \label{subsec:scale_space_sift}
 
-\todo[inline]{\cref{fig:sift_scales} referenzieren}
+Die Berechnung der Skalenbilder wird unterteilt in mehrere Oktaven $O$, sowie einer Anzahl von Skalen $S$ pro Oktave.
+Ausgehend von einer Basisglättung $\sigma_0$ (Skale 0) wird nun für alle $s=1,2,\dots,S$ je Oktave das Ursprungsbild $I$ mit dem Vielfachen $k^s \sigma_0$ geglättet, 
+wobei $k$ eine noch festzulegende Konstante darstellt (\cref{eq:k_by_s}).
+Ein Vorteil der Unterteilung der Berechnung in Oktaven ergibt sich aus dem Umstand, 
+dass die relative Genauigkeit eines mit $3.5\sigma$ gefilterten Bildes sich nicht wesentlich von der Genauigkeit einer mit $2\sigma$ gefilterten in der Größe halbierten Version des mit $2\sigma$ gefilterten Bildes unterscheidet (\cite{lowe2004distinctive}, vgl. \cite{shah:online:2012});
+durch die Reduktion der Bildfläche um Faktor vier wird der erforderliche Rechenaufwand mit jeder Oktave drastisch reduziert. \Cref{fig:sift_scales} verdeutlicht die Vorgehensweise an einem Beispiel mit $S=5$ Skalen pro Oktave, sowie insgesamt $O=3$ Oktaven.
 
-Um den Skalenraum für die Merkmalsextraktion zu generieren, wird das Eingangsbild mit unterschiedlichen $\sigma$ geglättet.
+Da durch die initiale Glättung des Bildes $\mat I$ mit $\sigma_0$ bereits Informationen in den hohen Frequenzen des Bildes verworfen werden,
+wird das Eingangsbild zunächst in der Größe verdoppelt und mit einem (nicht näher spezifizierten) kleinen $\sigma$ geglättet. 
+\Cite{lowe1999recognition} zeigt, dass hierdurch die Anzahl der gefundenen, über alle Skalen stabilen Merkmalspunkte vervierfacht werden kann, 
+wobei eine weitere Vergrößerung des Bildes keinen signifikanten Einfluss hat.
+
 Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Gaußoperators vernachlässigt werden (\cite[176]{sonka2008image}, vgl. \cref{fig:gaussian_at_sigma}); 
 um einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, 
-wählt etwa \cite{Nguyen:2007:GG:1407436} folglich einen Filterradius ("`support"') von $\floor*{3\sigma}$ je Dimension.
+wählt z.B. \cite{Nguyen:2007:GG:1407436} einen Filterradius ("`support"') von $\floor*{3\sigma}$ je Dimension.
 Diese grundsätzliche Abhängigkeit der Filtergröße von seiner Parametrierung führt jedoch (ungeachtet der Ausnutzung der Separierbarkeit) im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand, 
 weswegen \cite{lowe1999recognition} einen Kern einer festen Breite von $7$ Stützpunkten (d.h. einen Radius von drei Werten in jeder Dimension) bei einer Glättung von $\sigma=\sqrt{2}$ verwendet.
 
@@ -1110,10 +1120,10 @@ wodurch sich für alle $k=1$ (d.h. ein Vervielfachen der Standardabweichung um $
 sowie für alle $1<k<\sqrt{2}$ eine Reduktion der notwendigen Standardabweichung erreicht wird.
 Die Funktion $\sqrt{k^2+1}$ erreicht bei $k=\sqrt{2}$ den Wert $1$,
 wodurch für höhere $k$ entsprechend größere Filter benötigt werden. Eine Beispielimplementierung in \MATLAB findet sich in \cref{lst:matlab_scalespace_sigma}.
-\Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $s$ als
+\Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $S$ als
 %
 \begin{align}
-k &= 2^{\sfrac{1}{s}}
+k &= 2^{\sfrac{1}{S}} \label{eq:k_by_s}
 \end{align}
 %
 so dass für alle $s>2$ ein wünschenswerter Effekt eintritt, während für $s=2$ die Wurzel in \cref{eq:relative_sift_sigma} verschwindet\todo{Verweis auf notwendige Anzahl der Skalen für DoG-Extremafindung}.
@@ -1165,6 +1175,15 @@ direct_sigma, sigma_total, relative_sigma
 	\label{fig:gaussian_at_sigma}
 \end{figure}
 
+\section{Merkmalserkennung im Skalenraum}
+
+Soll die Merkmalserkennung in $S$ "`Skalen"' durchgeführt werden,
+wird eine tatsächliche Anzahl von $S+3$ Skalen benötigt.
+Der aus \cite{lowe2004distinctive} nicht schlüssig hervorgehende Sachverhalt liegt in der eingehend erwähnten dreidimensionalen Extremasuche begründet:
+Für die Durchsuchung eines \DoG-Bildes ("`Skale"') werden je zwei umliegende \DoG-Bilder benötigt, 
+für deren Berechnung wiederum jeweils zwei Skalen der Oktave vorliegen müssen; in je vier Skalen kann demnach \textit{eine} Detektion durchgeführt werden, 
+wobei sich zwei "`benachbarte"' Suchen je drei Skalen teilen. \Cref{fig:sift_scales} macht dies deutlich.
+
 \begin{figure}
 	\centering
 	\includestandalone{sift-scales/sift-scales}
@@ -1172,6 +1191,14 @@ direct_sigma, sigma_total, relative_sigma
 	\caption*{\algo{SIFT}-Featuredetektion im Skalenraum: $s=2$, $\sigma_0=0.5\sqrt{2}$, $\sigma_n=0$, $k=2^{\sfrac{1}{s}}=\sqrt{2}$. Drei Oktaven zu je $s+3=5$ Skalen; Aus je zwei Skalen wird ein DoG-Bild generiert, in je drei DoG-Bildern werden dreidimensionale Extrema detektiert. Ein Pixel, das ein Extremum in der lokalen, sowie der darüber- und darunterliegenden Skale ist, ist ein \textit{keypoint}.}
 	\label{fig:sift_scales}
 \end{figure}
+
+Die Erkennung selbst ist nun trivial:
+Für jedes durchsuchte Pixel $p_{x,y,\sigma}$ mit $\sigma=k^s\sigma_0$ wird entschieden, ob es ein Maximum oder Minimum seiner $\num{3}\times \SI{3}{\px}$-Nachbarschaft ist, wozu maximal $8$ Vergleiche notwendig sind.
+Ist dies nicht der Fall, wird der Test abgebrochen und mit dem nächsten Pixel fortgefahren; ist das Pixel ein Extremum seiner Umgebung, wird die Suche auf die darunterliegende Umgebung um $p_{x,y,\sigma_-}$ mit $\sigma_-=k^{s-1}\sigma_0$  ausgedehnt%
+\footnote{Da Extrema einer Skale auch immer in den darunterliegenden Skalen zu finden sind, ist dies eine Optimierung der Suche.}
+, was zu maximal~$9$ zusätzlichen Tests führt.
+Ist $p_{x,y,\sigma}$ auch hier ein Extremum, wird die Prüfung entsprechend in $p_{x,y,\sigma_+}$ mit $\sigma_+=k^{s+1}\sigma_0$ wiederholt.
+Pixel, die das Extremum ihrer $\SI{28}{\px}$-Umgebung sind, sind ein Merkmal in $\braces{x,y,k^s\sigma_0}$ und werden als \textit{keypoint} registriert.
 
 \clearpage
 \pagenumbering{Roman}
