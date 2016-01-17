@@ -171,6 +171,7 @@
 \newcommand{\parens}[1]{\ensuremath{\left(#1\right)}}
 \newcommand{\brackets}[1]{\ensuremath{\left[#1\right]}}
 \newcommand{\braces}[1]{\ensuremath{\left\{#1\right\}}}
+\newcommand{\myexp}[1]{\mathsf{e}^{#1}}
 
 \DeclarePairedDelimiter\ceil{\lceil}{\rceil}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
@@ -889,8 +890,6 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 \cite{yin2013content} beschreiben Content-Based Image Retrieval mittels Apache Hadoop auf Basis von \algo{SURF}-Deskriptoren und "`Locality-Sensitive Hashing"'.
 
-\cite{lowe1999recognition,lowe2004distinctive} sind die Original-Paper von Lowe zu \algo{SIFT}. Er merkt an, dass verschiedene Detektoren wie z.B. der Harris-Kantendetektor stark auf Bildskalierungen reagieren und demnach ungeeignet sind.
-
 \cite{ginesu2012objective} vergleichen \algo{WebP} mit bestehenden Bildformaten wie \algo{JPEG} und \algo{PNG}.
 
 \cite[395]{corke2011robotics} beschreibt \algo{RANSAC} in MATLAB.
@@ -937,15 +936,68 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 \chapter{Scale-Invariant Feature Transform}
 
+Scale-Invariant Feature Transform (\algo{SIFT}), zu Deutsch "`Skaleninvariante Merkmalstransformation"', 
+ist ein in \cite{lowe1999recognition,lowe2004distinctive} vorgestellter Detektor und Deskriptor für markante lokale Mermale in Bildern, den sogenannten \textit{keypoints},
+der dem menschlichen Sehempfinden nachempfunden wurde und invariant gegenüber Kontrast-, Translations-, Rotations- und Skalierungsunterschieden sein soll\todo{nicht jedoch vollständig affine Transformationen, siehe ASIFT}.
+
+Im Gegensatz zu globalen Mermalen eines Bildes (Größe, Histo- oder Farbkorrellogramme, ...) deren Erscheinung unter Einfluss selbst einfacher Transformationen 
+wie der Rotation des Bildes um \SI{90}{\degree}, einer Skalierung um \SI{50}{\percent}, der Reduktion des Kontrastes, etc. stark variieren kann, 
+beschränkt \algo{SIFT} sich auf die Erkennung lokaler Merkmale\footnote{Klassische lokale Merkmale eines Bildes sind Ecken und Kanten der abgebildeten Objekte, die über den Bildgradienten ermittelt werden können.} eines Bildes. 
+\Citeauthor{lowe1999recognition} merkt dabei an, 
+dass Detektoren, die ausschließlich auf Ecken- und Kanteninformationen basieren -- wie etwa der Moravec- oder Harris-Operator -- nicht invariant gegenüber Skalierungen des Bildes sind 
+und somit in keiner stabilen Merkmalserkennung bei etwa aus unterschiedlichen Distanzen aufgenommenen Bildern desselben Objektes resultieren.
+Er führt daher die Merkmalserkennung nicht auf den Bilddaten selbst, sondern innerhalb des sog. Skalenraums aus.
+\Cite{Witkin:1983:SF:1623516.1623607,1172729} definiert den Skalenraum (engl. \textit{Scale-Space}) eines Signals $f(z)$ als die Menge der Faltungen des Signals mit einem anisotropen Skalierungsoperator $g(z,\sigma)$ über alle Skalierung $\sigma$ als
+%
+\begin{align}
+\phi(x,y,\sigma) &= \fun f(x,y,\sigma) \ast \fun g(x,y,\sigma) \label{eq:scale-space}
+\end{align}
+%
+Er wählt für diesen Operator die Gaußfunktion\footnote{Der Gaußoperator ist die Wahrscheinlichkeitsdichtefunktion der Normalverteilung.}
+%
+\begin{align}
+\fun g(x,y,\sigma) &= \frac{1}{2\pi\sigma_x\sigma_y} \myexp{-\frac{(x-\mu_x)^2}{2 \sigma_x^2} - \frac{(y-\mu_y)^2}{2 \sigma_y^2}}
+\end{align}
+%
+bzw. für mittelwertfreie Signale mit einheitlicher Standardabweichung (bzw. Skale) in den räumlichen Dimensionen
+%
+\begin{align}
+\fun g(x,y,\sigma) &= \frac{1}{\sigma\sqrt{2\pi}} \myexp{-\frac{x^2 + y^2}{2 \sigma^2}} \label{eq:gaussian_2d}
+\end{align}
+%
+und zeigt mit \cite{4767749}, dass dieser der einzige für die Ermittlung des Skalenraums in Frage kommende Operator ist, so dass mit \cref{eq:scale-space,eq:gaussian_2d} gilt
+%
+\begin{align}
+\mat \Phi[x,y,\sigma] &= \mat I[x,y] \ast \mat G[x,y,\sigma]
+\end{align}
+%
+\Citeauthor{Witkin:1983:SF:1623516.1623607} stellt fest, dass Nulldurchgänge der Faltung und ihrer Ableitungen im Skalenraum (d.h. Kanten) ab einer bestimmten Skale $\sigma$ auftreten und für alle niedrigeren Skalen erhalten bleiben (die Frequenzauflösung steigt mit kleiner werdendem $\sigma$). \Cref{fig:scalespace_contours} dies in einem Konturdiagramm von $\nabla^2 \mat \Phi[x,y,\sigma]$ dar.
+Die in $\Phi[x,y,\sigma]$ gefundenen \algo{SIFT}-Merkmale sind somit prinzipbedingt keine zweidimensionalen Merkmale in $x,y$, sondern dreidimensional in $x,y,\sigma$.
+
 \begin{figure}
 	\centering
-	\includestandalone{sift-scales/sift-scales}
-	\caption{Extremadetektion im Scale-Space mittels Difference-of-Gaussian}
-	\caption*{\algo{SIFT}-Featuredetektion im Skalenraum: $s=2$, $\sigma_0=0.5\sqrt{2}$, $\sigma_n=0$, $k=2^{\sfrac{1}{s}}=\sqrt{2}$. Drei Oktaven zu je $s+3=5$ Skalen; Aus je zwei Skalen wird ein DoG-Bild generiert, in je drei DoG-Bildern werden dreidimensionale Extrema detektiert. Ein Pixel, das ein Extremum in der lokalen, sowie der darüber- und darunterliegenden Skale ist, ist ein \textit{keypoint}.}
-	\label{fig:sift_scales}
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{scale-space/signal-contours}
+		\caption{Signal (unten) und dazugehörige Konturen der Nulldurchgänge der zweiten Ableitung (oben).}
+		\caption*{Die Konturen beschreiben das Verhalten der Nulldurchgänge von $\sfrac{\partial^2}{\partial x^2} \Phi[x,y,\sigma]$ des Signals (unterer Graph) bei variierendem $\sigma$. Größere $\sigma$ (d.h. größere Skalen) finden sich in nach oben steigender Richtung, kleinere $\sigma$ darunter. Wendepunkte in $\Phi[x,y,\sigma]$ treten bei einem bestimmten $\sigma_A$ auf und bleiben für alle $\sigma<\sigma_A$ erhalten, d.h. ein in $\sigma_A$ gefundenes Merkmal wird auch in allen $\sigma<\sigma_A$ detektierbar sein.}
+	\end{subfigure}	
+
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{scale-space/dumbell-contours}
+		\caption{Hantelfigur und Verlauf der Kantenkonturen bei wachsender Skale.}
+		\caption*{Zusammenführung der $\sfrac{\partial^2}{\partial x^2} \Phi[x,y,\sigma]$-Nulldurchgänge bei wachsender Skale. Schwarz und weiß repräsentieren die Werte $0$ und $1$, von links nach rechts wird für jedes Bild der Sequenz der Wert von $\sigma$ verdoppelt.}
+	\end{subfigure}
+		
+	\caption{Verhalten der Nulldurchgänge im Skalenraum}
+	\caption*{\cite{img:4767749}}
+	\label{fig:scalespace_contours}
 \end{figure}
 
 \section{Laplacian of Gaussian und Difference of Gaussian}
+
+
 
 \todo[inline]{auch über LoG und DoG schreiben ...}
 
@@ -1050,6 +1102,14 @@ end
 
 direct_sigma, sigma_total, relative_sigma
 \end{lstlisting}
+
+\begin{figure}
+	\centering
+	\includestandalone{sift-scales/sift-scales}
+	\caption{Extremadetektion im Scale-Space mittels Difference-of-Gaussian}
+	\caption*{\algo{SIFT}-Featuredetektion im Skalenraum: $s=2$, $\sigma_0=0.5\sqrt{2}$, $\sigma_n=0$, $k=2^{\sfrac{1}{s}}=\sqrt{2}$. Drei Oktaven zu je $s+3=5$ Skalen; Aus je zwei Skalen wird ein DoG-Bild generiert, in je drei DoG-Bildern werden dreidimensionale Extrema detektiert. Ein Pixel, das ein Extremum in der lokalen, sowie der darüber- und darunterliegenden Skale ist, ist ein \textit{keypoint}.}
+	\label{fig:sift_scales}
+\end{figure}
 
 \clearpage
 \pagenumbering{Roman}
