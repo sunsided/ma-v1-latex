@@ -1,7 +1,8 @@
 \documentclass[a4paper, 11pt, oneside, ngerman]{thesis}
 % TODO: Check twoside book-like formatting and page numbers
 
-\usepackage[english,ngerman]{babel}
+\usepackage[ngerman]{babel}
+\usepackage[autostyle,german=quotes]{csquotes}
 
 % thesis class
 \renewcommand\figureshortname{Abb.}
@@ -50,7 +51,6 @@
 \usetikzlibrary{calc}
 \usetikzlibrary{fit}
 
-\usepackage[babel]{csquotes}
 \usepackage[backend=biber,style=authoryear]{biblatex}
 
 \usepackage{listings}
@@ -166,6 +166,9 @@
 \newcommand{\thetavec}{\ensuremath{\vec{\theta}}}
 \newcommand{\order}[1]{\ensuremath{\mathcal{O}(#1)}}
 \newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
+\newcommand{\parens}[1]{\ensuremath{\left(#1\right)}}
+\newcommand{\brackets}[1]{\ensuremath{\left[#1\right]}}
+\newcommand{\braces}[1]{\ensuremath{\left\{#1\right\}}}
 
 \DeclarePairedDelimiter\ceil{\lceil}{\rceil}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
@@ -938,6 +941,12 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 % \url{http://www.nowozin.net/sebastian/tu-berlin-2006/libsift/} Sebastian Nomozin macht es in der Beschreibung seines Codes falsch
 
+Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Gaußoperators vernachlässigt werden (vgl. \cite[176]{sonka2008image}); 
+um jedoch einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, 
+wählt etwa \cite{Nguyen:2007:GG:1407436} einen entsprechenden Filterradius ("`support"') von $\floor*{3\sigma}$ je Dimension.
+Die grundsätzliche Abhängigkeit der Filtergröße von seiner Parametrierung führt jedoch (ungeachtet der Ausnutzung der Separierbarkeit) im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand, 
+weswegen \cite{lowe1999recognition} einen Kern der festen Breite $7$ (d.h. einen Radius von drei Werten in jeder Dimension) verwendet.
+
 Eine Besonderheit der der Gaußfunktion $\fun g(x | \mu, \sigma)$ ist, dass sowohl ihr Produkt, als auch ihre Faltung wieder eine Gaußfunktion ergeben\todo{Quelle}.
 Bei der Faltung zweier Gaußfunktionen unterschiedlicher Standardabweichungen $\sigma_a, \sigma_b$ gilt bezüglich der Standardabweichung $\sigma_c$ des Ergebnisses
 %
@@ -946,31 +955,29 @@ Bei der Faltung zweier Gaußfunktionen unterschiedlicher Standardabweichungen $\
 \sigma_c &= \sqrt{ (\sigma_a )^2 + ( \sigma_b )^2 } \label{eq:convolution_twosigma_sqrt} 
 \end{align}
 \todo{Ziehen aus zwei Normalverteilungen}
-
-Konkret bedeutet \cref{eq:convolution_twosigma_sqrt}, dass die wiederholte Anwendung desselben Gaußoperators auf ein Bild identisch ist mit der direkten Anwendung eines mit $\sigma' = \sqrt{2}\sigma$ "`breiteren"' Operators auf das Ursprungsbild, wobei sich das exponentielle Wachstum in $k^p\sigma_1$ als negativ herausstellt.
-
-Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Operators vernachlässigt werden (vgl. \cite[176]{sonka2008image}); um jedoch einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, wählt etwa \cite{Nguyen:2007:GG:1407436} eine entsprechende Filterbreite von $\floor*{3\sigma}$ je Dimension%
-\footnote{Für das Ermitteln einer ungeraden Filtergröße kann der Wert $2\floor*{\frac{3\sigma}{2}}+1$ verwendet werden.}, \cite{lowe1999recognition} wählt einen Kern der Breite $7$ (d.h. einen Radius von drei Werten in jede Richtung).
-Diese Abhängigkeit der Filtergröße von seiner Parametrierung führt nun trotz Ausnutzung der Separierbarkeit im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand.
+%
+Konkret bedeutet \cref{eq:convolution_twosigma_sqrt}, 
+dass die wiederholte Anwendung desselben Gaußoperators auf ein Bild identisch ist mit der direkten Anwendung eines mit $\sigma' = \sqrt{2}\sigma$ "`breiteren"' Operators auf das Ursprungsbild, 
+wobei sich das exponentielle Wachstum in $k^p\sigma_0$ nun bezüglich der Filtergröße als prinzipiell ungünstig herausstellt.
 
 Abhilfe schafft es, anstatt der Filterung
 %
 \begin{align}
-\mat H_p &= \mat G_{Gauss}(k^p \, \sigma) \ast \mat I
+\mat L_p &= \mat G_{Gauss}(k^p \, \sigma) \ast \mat I
 \end{align}
 %
-rekursiv vorzugehen, wobei analog \cref{eq:convolution_twosigma_sqrt} die folgende Annahme aufgestellt wird:
+rekursiv vorzugehen, wobei analog \cref{eq:convolution_twosigma_sqrt} gilt:
 %
 \begin{align}
-\sigma_{p+1} &= \sqrt{ (\sigma' )^2 + ( \sigma_{p} )^2 } \label{eq:sift_convolution_twosigma_sqrt} 
+\sigma_{p+1} &= \sqrt{ \sigma^2 + \sigma^2_{p} } \label{eq:sift_convolution_twosigma_sqrt} 
 \end{align}
 %
 Über die Identität
 %
 \begin{align}
 \begin{split}
-\sigma_{p+1} &= k^p \, \sigma_1 \\ 
-			 &= k \left( k^{p-1} \sigma_1 \right) \\		 
+\sigma_{p+1} &= k^p \, \sigma_0 \\ 
+			 &= k \left( k^{p-1} \sigma_0 \right) \\		 
 			 &= k \, \sigma_p \\
 \end{split}
 \end{align}
@@ -978,17 +985,36 @@ rekursiv vorzugehen, wobei analog \cref{eq:convolution_twosigma_sqrt} die folgen
 ergibt sich gemäß \cref{eq:sift_convolution_twosigma_sqrt} der Zusammenhang
 %
 \begin{align}
-k \sigma_1 &= \sqrt{ (\sigma' )^2 + ( \sigma_1 )^2 } \\
-% k^2 \sigma^2_p &= (\sigma')^2 + \sigma^2_1 \\
-% \sigma^2_1 ( k^2 - 1) &= (\sigma')^2 \\
-\sigma' &= \sigma_1 \sqrt{ k^2 - 1 }
+k^{p+1}\sigma_1 &= \sqrt{ \sigma^2 + \parens{k^p\sigma_0}^2 } \\
+\sigma &= \sqrt{ \parens{k^{p+1}\sigma_0}^2 - \parens{k^p\sigma_0}^2 } \label{eq:sift_deconv} \\
+       &= k^p\sigma_0 \, \sqrt{ k^2-1 } \label{eq:relative_sift_sigma}
 \end{align}
 %
-wodurch es möglich wird, die Bilder mit einem deterministischen Kern fester Größe rekursiv zu filtern, so dass
+wodurch sich für alle $k=1$ (d.h. ein Vervielfachen der Standardabweichung um $1$ in jedem Schritt) wie erwartet die Identität mit $\sigma=0$ ergibt, 
+sowie für alle $1<k<\sqrt{2}$ eine Reduktion der notwendigen Standardabweichung erreicht wird.
+Die Funktion $\sqrt{k^2+1}$ erreicht bei $k=\sqrt{2}$ den Wert $1$,
+wodurch für höhere $k$ entsprechend größere Filter benötigt werden.
+\Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $s$ als
 %
 \begin{align}
-\mat H_{p+1} &= \mat G_{Gauss}(\sigma') \ast \mat H_p
+k &= 2^{\sfrac{1}{s}}
 \end{align}
+%
+so dass für alle $s>2$ ein wünschenswerter Effekt eintritt, während für $s=2$ die Wurzel in \cref{eq:relative_sift_sigma} verschwindet\todo{Verweis auf notwendige Anzahl der Skalen für DoG-Extremafindung}.
+
+\Citeauthor{lowe2004distinctive} geht davon aus, dass jedes Originalbild $I$ bereits als mit $\sigma_n=0.5$ geglättet angenommen werden kann\todo{aber wieso?}, weswegen das Erzeugen des Skalenraumes anstelle von
+%
+\begin{align}
+\mat L_{p+1} &= \mat G_{Gauss}(\sigma) \ast \mat L_p
+\end{align}
+%
+praktisch mit
+%
+\begin{align}
+\mat L_{p+1} &= \mat G_{Gauss}(\sqrt{\sigma^2 - \sigma_n^2}) \ast \mat L_p
+\end{align}
+%
+durchgeführt werden kann (\cite{vlfeat:online:2016}, vgl. \cref{eq:sift_deconv}), wodurch die Filtergröße -- mit ihr der benötigte Rechenaufwand -- zusätzlich reduziert wird.
 
 \clearpage
 \pagenumbering{Roman}
