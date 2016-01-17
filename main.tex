@@ -144,20 +144,23 @@
 % Generate the index and glossary
 \makeindex
 
-\newcommand{\name}[1]{\textsc{#1}}
-\newcommand{\algo}[1]{\textit{#1}}
-\newcommand{\acro}[1]{\texttt{#1}}
-\newcommand{\datatype}[1]{\texttt{#1}}
-\newcommand{\imgfile}[1]{\texttt{#1}}
-\newcommand{\engl}[1]{engl.: \textit{#1}}
+\newcommand{\name}[1]{\textsc{#1}\xspace}
+\newcommand{\algo}[1]{\textit{#1}\xspace}
+\newcommand{\acro}[1]{\texttt{#1}\xspace}
+\newcommand{\datatype}[1]{\texttt{#1}\xspace}
+\newcommand{\imgfile}[1]{\texttt{#1}\xspace}
+\newcommand{\engl}[1]{engl.: \textit{#1}\xspace}
 
-\newcommand{\LAB}{L\textsuperscript{\tiny *}a\textsuperscript{\tiny *}b\textsuperscript{\tiny *}\index{Lab}}
-\newcommand{\LUV}{L\textsuperscript{\tiny *}u\textsuperscript{\tiny *}v\textsuperscript{\tiny *}\index{Luv}}
-\newcommand{\RGB}{RGB\index{RGB}}
-\newcommand{\HLS}{HLS\index{HLS}}
-\newcommand{\HSV}{HSV\index{HSV}}
+\newcommand{\LAB}{L\textsuperscript{\tiny *}a\textsuperscript{\tiny *}b\textsuperscript{\tiny *}\index{Lab}\xspace}
+\newcommand{\LUV}{L\textsuperscript{\tiny *}u\textsuperscript{\tiny *}v\textsuperscript{\tiny *}\index{Luv}\xspace}
+\newcommand{\RGB}{RGB\index{RGB}\xspace}
+\newcommand{\HLS}{HLS\index{HLS}\xspace}
+\newcommand{\HSV}{HSV\index{HSV}\xspace}
 
-\newcommand{\MATLAB}{MATLAB\index{MATLAB}}
+\newcommand{\LoG}{LoG\index{Laplacian-of-Gaussian}\index{Gaussian!Laplacian-of-Gaussian}\xspace}
+\newcommand{\DoG}{DoG\index{Difference-of-Gaussian}\index{Gaussian!Difference-of-Gaussian}\xspace}
+
+\newcommand{\MATLAB}{MATLAB\index{MATLAB}\xspace}
 
 % math commands
 \renewcommand{\vec}{\vectorsym}
@@ -917,12 +920,14 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 		\centering
 		\includestandalone{kernels/laplacian-of-gaussian}
 		\caption{LoG: Erste und zweite Ableitung einer Gaußfunktion mit $\mu=0, \sigma=1.6$.}
+		\label{fig:log}
 	\end{subfigure}	
 
 	\begin{subfigure}[b]{\textwidth}
 		\centering
 		\includestandalone{kernels/difference-of-gaussian}
 		\caption{DoG: Differenz zweier Gaußfunktionen $g(x)$ mit $\mu=0$ und  unterschiedlichem $\sigma$ im Verhältnis $1:1.6$.}
+		\label{fig:dog}
 	\end{subfigure}
 	
 	\begin{subfigure}[b]{\textwidth}
@@ -932,6 +937,7 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 	\end{subfigure}
 	
 	\caption{Laplacian-of-Gaussian (LoG) und Difference-of-Gaussian (DoG)}
+	\label{fig:log-vs-dog}
 \end{figure}
 
 \chapter{Scale-Invariant Feature Transform}
@@ -953,22 +959,16 @@ Er führt daher die Merkmalserkennung nicht auf den Bilddaten selbst, sondern in
 \phi(x,y,\sigma) &= \fun f(x,y,\sigma) \ast \fun g(x,y,\sigma) \label{eq:scale-space}
 \end{align}
 %
-Er wählt für diesen Operator die Gaußfunktion\footnote{Der Gaußoperator ist die Wahrscheinlichkeitsdichtefunktion der Normalverteilung.}
+Er wählt für diesen Operator die Gaußfunktion\footnote{Der Gaußoperator ist die Wahrscheinlichkeitsdichtefunktion der Normalverteilung.} für mittelwertfreie Signale mit einheitlicher Standardabweichung (d.h. Skale) in den räumlichen Dimensionen
 %
 \begin{align}
-\fun g(x,y,\sigma) &= \frac{1}{2\pi\sigma_x\sigma_y} \myexp{-\frac{(x-\mu_x)^2}{2 \sigma_x^2} - \frac{(y-\mu_y)^2}{2 \sigma_y^2}}
+\fun g_{Gauss}(x,y,\sigma) &= \frac{1}{\sigma\sqrt{2\pi}} \myexp{-\frac{x^2 + y^2}{2 \sigma^2}} \label{eq:gaussian_2d}
 \end{align}
 %
-bzw. für mittelwertfreie Signale mit einheitlicher Standardabweichung (bzw. Skale) in den räumlichen Dimensionen
+und zeigt mit \cite{4767749}, dass dieser der \textit{einzige} für die Ermittlung des Skalenraums in Frage kommende Operator ist, so dass mit \cref{eq:scale-space,eq:gaussian_2d} gilt
 %
 \begin{align}
-\fun g(x,y,\sigma) &= \frac{1}{\sigma\sqrt{2\pi}} \myexp{-\frac{x^2 + y^2}{2 \sigma^2}} \label{eq:gaussian_2d}
-\end{align}
-%
-und zeigt mit \cite{4767749}, dass dieser der einzige für die Ermittlung des Skalenraums in Frage kommende Operator ist, so dass mit \cref{eq:scale-space,eq:gaussian_2d} gilt
-%
-\begin{align}
-\mat \Phi[x,y,\sigma] &= \mat I[x,y] \ast \mat G[x,y,\sigma]
+\mat \Phi[x,y,\sigma] &= \mat I[x,y] \ast \mat G_{Gauss}[x,y,\sigma]
 \end{align}
 %
 \Citeauthor{Witkin:1983:SF:1623516.1623607} stellt fest, dass Nulldurchgänge der Faltung und ihrer Ableitungen im Skalenraum (d.h. Kanten) ab einer bestimmten Skale $\sigma$ auftreten und für alle niedrigeren Skalen erhalten bleiben (die Frequenzauflösung steigt mit kleiner werdendem $\sigma$). \Cref{fig:scalespace_contours} dies in einem Konturdiagramm von $\nabla^2 \mat \Phi[x,y,\sigma]$ dar.
@@ -997,17 +997,71 @@ Die in $\Phi[x,y,\sigma]$ gefundenen \algo{SIFT}-Merkmale sind somit prinzipbedi
 
 \section{Laplacian of Gaussian und Difference of Gaussian}
 
+Die Extremadetektion im Skalenraum basiert nach wie vor auf einer Kantendetektion, bei welcher der Laplace-Operator (d.h. die zweite Ableitung des Bildes) zur Detektion der Kantenpositionen verwendet wird.
+Dieser ist aufgrund seiner Isotropie (Richtungsinvarianz) einer gerichteter Ableitung, 
+wie sie etwa durch den Sobel-Operator (vgl. \cref{eq:gradient}) erreicht wird, vorzuziehen. 
+Wenngleich die zweifache Differenzierung prinzipbedingt überlagernde Störsignale\todo{Faktor} erneut gegenüber einem einfach differenzierendem Operator verstärkt,
+wird dieser Sachverhalt durch die bereits erfolgte Glättung mittels des Gaußoperators gemildert.
+%
+Die Gewinnung der Parameter für den Laplace-Operator ist nicht eindeutig; 
+zwei Varianten eines Laplace-Operatorkernes (\cite{sonka2008image}) sind:
+%
+\begin{align}
+\mat G_{Laplace,1} = \begin{bmatrix}
+	0 & 1 & 0 \\
+	1 & -4 & 1 \\
+	0 & 1 & 0 \\
+	\end{bmatrix} , & \quad
+\mat G_{Laplace,2} = \begin{bmatrix}
+	1 & 1 & 1 \\
+	1 & -8 & 1 \\
+	1 & 1 & 1 \\
+	\end{bmatrix}
+\end{align}
+%
+Das Ergebnis einer Laplace-Filterung des mit einem Gaußoperator geglätteten Bildes (Laplacian-of-Gaussian, \LoG) ist als Marr-Hildreth-Operator oder Mexican Hat-Kern%
+\footnote{Der Verlauf der Funktionswerte ähnelt der Form eines (auf dem Kopf stehenden) Sombreros, vgl. dazu \cref{fig:log}.} 
+bekannt (\cite{corke2011robotics}). 
+Folglich gilt
+%
+\begin{align}
+\mat G_{LoG} = \mat G_{Gauss} \ast \mat G_{Laplace}
+\end{align}
+%
+Der Laplace-Operator selbst ist nicht separierbar (der Rang der Matrix ist größer als~$1$), wodurch dies ebenfalls für den \LoG-Operator gilt, was seine Anwendung kostspielig macht (vgl. \cref{subsec:scale_space_sift}).
+Analytisch ergibt sich der \LoG-Operator als
+%
+\begin{align}
+\fun g_{LoG}(x,y,\sigma) &= \nabla^2 \fun g_{Gauss}(x,y,\sigma) \\
+	&= \frac{\partial^2}{\partial x^2} \fun g_{Gauss}(x,y,\sigma) + \frac{\partial^2}{\partial y^2} \fun g_{Gauss}(x,y,\sigma)\\
+	&= \frac{1}{\pi\sigma^4} \parens{\frac{x^2+y^2}{2\sigma^2}\myexp{-\frac{x^2+y^2}{2\sigma^2}}}
+\end{align}
 
+\Cite{lowe1999recognition} macht sich zunutze, dass die Faltung eines Bildes mit dem \LoG-Operator angenähert werden kann durch die Subtraktion zweier durch den Skalenraum ohnehin vorhandenen mit dem Gaußoperator geglätteten Bilder;
+das Verfahren heißt entsprechend Difference-of-Gaussian (\DoG).
+Es gilt:
+%
+\begin{align}
+\mat L[\sigma] &= \mat I \ast \mat G_{LoG}[\sigma] \\
+	&\approx 
+	  \mat I \ast \mat G_{Gauss}[k\sigma]
+	- \mat I \ast \mat G_{Gauss}[\sigma]
+\end{align}
+%
+mit $k>1$, wobei für eine gute Approximation üblicherweise $k \approx 1.6$ angenommen wird (vgl. \cite{corke2011robotics}).
+\Citeauthor{lowe1999recognition} kommt experimentell zu dem Schluss, dass die (analytisch) exakte Wahl von $k$ für die Lokalisierung der Merkmale und damit die Stabilität der Erkennung nur eine untergeordnete Rolle spielt. \Cref{{fig:log-vs-dog}} zeigt einen Vergleich der beiden Verfahren.
 
-\todo[inline]{auch über LoG und DoG schreiben ...}
+\subsection{Berechnung des Skalenraumes}
+\label{subsec:scale_space_sift}
 
 \todo[inline]{\cref{fig:sift_scales} referenzieren}
 
-Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Gaußoperators vernachlässigt werden (vgl. \cite[176]{sonka2008image}); 
-um jedoch einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, 
-wählt etwa \cite{Nguyen:2007:GG:1407436} einen entsprechenden Filterradius ("`support"') von $\floor*{3\sigma}$ je Dimension.
-Die grundsätzliche Abhängigkeit der Filtergröße von seiner Parametrierung führt jedoch (ungeachtet der Ausnutzung der Separierbarkeit) im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand, 
-weswegen \cite{lowe1999recognition} einen Kern der festen Breite $7$ (d.h. einen Radius von drei Werten in jeder Dimension) verwendet.
+Um den Skalenraum für die Merkmalsextraktion zu generieren, wird das Eingangsbild mit unterschiedlichen $\sigma$ geglättet.
+Der Einfluss von Werten außerhalb $\mu \pm 3\sigma$ kann für die Betrachtung des Gaußoperators vernachlässigt werden (\cite[176]{sonka2008image}, vgl. \cref{fig:gaussian_at_sigma}); 
+um einen zu starken Beschnitt der Werte in den Randbereichen des Kernes zu vermeiden, 
+wählt etwa \cite{Nguyen:2007:GG:1407436} folglich einen Filterradius ("`support"') von $\floor*{3\sigma}$ je Dimension.
+Diese grundsätzliche Abhängigkeit der Filtergröße von seiner Parametrierung führt jedoch (ungeachtet der Ausnutzung der Separierbarkeit) im vorliegenden Fall zu einem ebenfalls exponential steigenden Rechenaufwand, 
+weswegen \cite{lowe1999recognition} einen Kern einer festen Breite von $7$ Stützpunkten (d.h. einen Radius von drei Werten in jeder Dimension) bei einer Glättung von $\sigma=\sqrt{2}$ verwendet.
 
 Eine Besonderheit der der Gaußfunktion $\fun g(x | \mu, \sigma)$ ist, dass sowohl ihr Produkt, als auch ihre Faltung wieder eine Gaußfunktion ergeben\todo{Quelle}.
 Bei der Faltung zweier Gaußfunktionen unterschiedlicher Standardabweichungen $\sigma_a, \sigma_b$ gilt bezüglich der Standardabweichung $\sigma_c$ des Ergebnisses
@@ -1063,7 +1117,7 @@ k &= 2^{\sfrac{1}{s}}
 \end{align}
 %
 so dass für alle $s>2$ ein wünschenswerter Effekt eintritt, während für $s=2$ die Wurzel in \cref{eq:relative_sift_sigma} verschwindet\todo{Verweis auf notwendige Anzahl der Skalen für DoG-Extremafindung}.
-\Citeauthor{lowe2004distinctive} geht davon aus, dass jedes Originalbild $I$ bereits als mit $\sigma_n=0.5$ geglättet angenommen werden kann\todo{aber wieso?}, weswegen das Erzeugen des Skalenraumes anstelle von
+\Citeauthor{lowe2004distinctive} geht weiterhin davon aus, dass jedes Originalbild $I$ bereits als mit $\sigma_n=0.5$ geglättet angenommen werden kann\todo{aber wieso?}, weswegen das Erzeugen des Skalenraumes anstelle von
 %
 \begin{align}
 \mat L_{p+1} &= \mat G_{Gauss}(\sigma) \ast \mat L_p
@@ -1102,6 +1156,14 @@ end
 
 direct_sigma, sigma_total, relative_sigma
 \end{lstlisting}
+
+\begin{figure}
+	\centering
+	\includestandalone{kernels/gaussian-at-sigma}
+	\caption{Werte des Gaußkernes in Entfernungen von $k\sigma$}
+	\caption*{Die Wahrscheinlichkeitsdichtefunktion der Normalverteilung $g_{Gauss}(x,\sigma|\mu=0)$ evaluiert an $x=k\sigma$ für variable $\sigma$. Werte kleine $10^0$ stellen Abschwächungen des Signales dar. Für $k=3, \sigma=1$ stellt sich bereits eine Abschwächung um mehr als $10^{-2}$ ein; bei einer Abschwächung um ca. $2\cdot 10^{-3}$ sind \SI{8}{\bit}-Intensitätswerte durch Diskretisierungseffekte vollständig unterdrückt.}
+	\label{fig:gaussian_at_sigma}
+\end{figure}
 
 \begin{figure}
 	\centering

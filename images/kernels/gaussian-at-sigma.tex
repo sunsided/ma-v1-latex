@@ -1,0 +1,90 @@
+\documentclass[crop,tikz]{standalone}
+
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[margin=0cm,nohead]{geometry}
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{calc}
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\begin{tikzpicture}
+	\begin{loglogaxis}[
+		y tick label style={/pgf/number format/fixed},
+		extra y ticks={1,0.01,1E-7,1E-19},		
+		ytick pos=left,
+		xtick pos=left,
+		ymajorgrids,
+		xmajorgrids,
+		xlabel = {$\sigma$},
+		ylabel = {$g_{Gauss}(x,\sigma)$},
+		every outer x axis line/.append style=
+			{-stealth},
+		every outer y axis line/.append style=
+			{-stealth},
+		legend style ={ 
+			%legend columns=0,
+			%at={(0.5,-0.15) },
+	        anchor=north west, 
+	        draw=black, 
+	        fill=white,
+	        align=left
+        	},
+	]
+
+	\addplot[
+			id=GaussAt1Sigma,	
+			black,
+			mark=*,
+			samples=10,
+			domain=1E-2:1E2] 
+		gnuplot{
+			  1/(x*sqrt(2*pi))*exp(-(1*x)**2/(2*x**2)) 
+			};
+	\addlegendentry{$x=1\sigma$};
+
+	\addplot[
+			id=GaussAt3Sigma,	
+			blue,
+			mark=square,
+			samples=10,
+			domain=1E-2:1E2] 
+		gnuplot{
+			  1/(x*sqrt(2*pi))*exp(-(3*x)**2/(2*x**2)) 
+			};
+	\addlegendentry{$x=3\sigma$};	
+			
+	\addplot[
+			id=GaussAt6Sigma,	
+			red,
+			mark=triangle,
+			samples=10,
+			domain=1E-2:1E2] 
+		gnuplot{
+			  1/(x*sqrt(2*pi))*exp(-(6*x)**2/(2*x**2)) 
+			};
+	\addlegendentry{$x=6\sigma$};	
+			
+	\addplot[
+			id=GaussAt9Sigma,	
+			magenta,
+			mark=diamond,
+			samples=10,
+			domain=1E-2:1E2] 
+		gnuplot{
+			  1/(x*sqrt(2*pi))*exp(-(9*x)**2/(2*x**2)) 
+			};
+	\addlegendentry{$x=9\sigma$};	
+	  
+	
+	\end{loglogaxis}
+\end{tikzpicture}
+\end{document}

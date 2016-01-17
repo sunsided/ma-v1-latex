@@ -1,0 +1,7 @@
+*.table
+*.gnuplot
+*.vrs
+*.synctex.gz
+*.pdf
+*.log
+*.aux
