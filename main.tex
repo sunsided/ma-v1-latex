@@ -979,7 +979,7 @@ rekursiv vorzugehen, wobei analog \cref{eq:convolution_twosigma_sqrt} gilt:
 \sigma_{p+1} &= k^p \, \sigma_0 \\ 
 			 &= k \left( k^{p-1} \sigma_0 \right) \\		 
 			 &= k \, \sigma_p \\
-\end{split}
+\end{split} \label{eq:sift_sigman}
 \end{align}
 %
 ergibt sich gemäß \cref{eq:sift_convolution_twosigma_sqrt} der Zusammenhang
@@ -993,7 +993,7 @@ k^{p+1}\sigma_1 &= \sqrt{ \sigma^2 + \parens{k^p\sigma_0}^2 } \\
 wodurch sich für alle $k=1$ (d.h. ein Vervielfachen der Standardabweichung um $1$ in jedem Schritt) wie erwartet die Identität mit $\sigma=0$ ergibt, 
 sowie für alle $1<k<\sqrt{2}$ eine Reduktion der notwendigen Standardabweichung erreicht wird.
 Die Funktion $\sqrt{k^2+1}$ erreicht bei $k=\sqrt{2}$ den Wert $1$,
-wodurch für höhere $k$ entsprechend größere Filter benötigt werden.
+wodurch für höhere $k$ entsprechend größere Filter benötigt werden. Eine Beispielimplementierung in MATLAB findet sich in \cref{lst:matlab_scalespace_sigma}.
 \Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $s$ als
 %
 \begin{align}
@@ -1001,7 +1001,6 @@ k &= 2^{\sfrac{1}{s}}
 \end{align}
 %
 so dass für alle $s>2$ ein wünschenswerter Effekt eintritt, während für $s=2$ die Wurzel in \cref{eq:relative_sift_sigma} verschwindet\todo{Verweis auf notwendige Anzahl der Skalen für DoG-Extremafindung}.
-
 \Citeauthor{lowe2004distinctive} geht davon aus, dass jedes Originalbild $I$ bereits als mit $\sigma_n=0.5$ geglättet angenommen werden kann\todo{aber wieso?}, weswegen das Erzeugen des Skalenraumes anstelle von
 %
 \begin{align}
@@ -1014,7 +1013,33 @@ praktisch mit
 \mat L_{p+1} &= \mat G_{Gauss}(\sqrt{\sigma^2 - \sigma_n^2}) \ast \mat L_p
 \end{align}
 %
-durchgeführt werden kann (\cite{vlfeat:online:2016}, vgl. \cref{eq:sift_deconv}), wodurch die Filtergröße -- mit ihr der benötigte Rechenaufwand -- zusätzlich reduziert wird.
+durchgeführt wird (\cite{vlfeat:online:2016}, vgl. \cref{eq:sift_deconv}), wodurch die Filtergröße -- mit ihr der benötigte Rechenaufwand -- zusätzlich reduziert wird.
+
+\begin{lstlisting}[style=matlab,caption={Ermittlung des $\sigma$ zur Skalenraumerstellung}, label=lst:matlab_scalespace_sigma]
+s                     = 3;
+k                     = 2^(1/s);
+sigma_0               = 1.6;
+P                     = s+3;
+
+sigma_current         = sigma_0;
+sigma_total(1)        = sigma_current;
+
+for p=0:(P-1)
+    % Direkte Ermittlung von /*@$\sigma_{p+1}$@*/ gemäß Gleichung /*@\labelcref{eq:sift_sigman}@*/
+    sigma_direct      = k^p * sigma_0;
+    
+    % Relative Ermittlung von /*@$\sigma_{p+1}$@*/ auf Basis von /*@$\sigma_{p}$@*/ gemäß Gleichung /*@\labelcref{eq:relative_sift_sigma}@*/
+    sigma             = k^p * sigma_0 * sqrt( k^2 - 1 );
+    sigma_next        = sqrt( sigma^2 + sigma_current^2 );
+
+    direct_sigma(p+1) = sigma_direct;
+    sigma_total(p+1)  = sigma_current;
+    relative_sigma(p+1) = sigma;
+    sigma_current = sigma_next;
+end
+
+direct_sigma, sigma_total, relative_sigma
+\end{lstlisting}
 
 \clearpage
 \pagenumbering{Roman}
