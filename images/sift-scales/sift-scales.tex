@@ -1,0 +1,154 @@
+\documentclass[crop,tikz]{standalone}
+
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[margin=0cm,nohead]{geometry}
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{calc}
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\begin{tikzpicture}[scale=0.9]
+	
+%	\draw (0,0) -- (0,-10);
+%	\draw (0,0) -- (10,0);
+
+	
+	\begin{scope}[local bounding box=octave0]
+	\foreach \s [evaluate=\s as \x using (\s-1)*3] in {1,2,...,5}	
+	{
+		\node[inner sep=0pt] (0/L\s) at (\x cm,0)
+    		{\includegraphics[width=2.5cm]{l-octave-0-scale-\s}};
+    }
+
+   	\node at ($(0/L1.north) + (0,0.25cm)$) {$\sigma=0.7071$};
+   	\node at ($(0/L2.north) + (0,0.25cm)$) {$\sigma=1.0$};
+	\node at ($(0/L3.north) + (0,0.25cm)$) {$\sigma=1.4142$};
+	\node at ($(0/L4.north) + (0,0.25cm)$) {$\sigma=2.0$};
+	\node at ($(0/L5.north) + (0,0.25cm)$) {$\sigma=2.8284$};
+    
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node [circle,draw=black,inner sep=0cm] (0/L\s/L\t) at ($ (0/L\s.south)!0.5!(0/L\t.south) - (0 cm,1 cm) $) {+};
+		\draw [->] (0/L\s.south) to [bend right] node [inner sep=1pt,draw=black,midway,fill=white,inner sep=2pt] {-1} (0/L\s/L\t.west);
+		\draw [->] (0/L\t.south) to [bend left] (0/L\s/L\t.east);
+	}
+	
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node[inner sep=0pt] (0/DoG\s) at ($ (0/L\s/L\t.south) - (0 cm,1.75 cm) $)
+    		{\includegraphics[width=2.5cm]{dog-octave-0-scale-\t,\s}};
+    	\draw [->] (0/L\s/L\t.south) to (0/DoG\s.north);
+	}
+
+	\foreach \s/\t/\u in {1/2/3,2/3/4}	
+	{    
+    	\node [draw=black,inner sep=3pt] (0/DoG/\s/\t/\u) at ($ (0/DoG\t.south) - (0 cm,1.5 cm) $) {Extrema};
+		\draw [->] (0/DoG\s.south) to (0/DoG/\s/\t/\u.north west);
+		\draw [->] (0/DoG\u.south) to (0/DoG/\s/\t/\u.north east);
+		\draw [->] (0/DoG\t.south) to (0/DoG/\s/\t/\u.north);
+	}
+
+    \end{scope}
+    
+    
+    \begin{scope}[local bounding box=octave1,shift={($(octave0.south)+(0cm,-2cm)$)}]
+	\foreach \s [evaluate=\s as \x using (\s-3)*3] in {1,2,...,5}
+	{
+		\node[inner sep=0pt] (1/L\s) at (\x cm, 0cm)
+    		{\includegraphics[width=1.25cm]{l-octave-1-scale-\s}};
+    }   
+	
+   	\node at ($(1/L1.north) + (0,0.25cm)$) {$\sigma=1.4142$};
+   	\node at ($(1/L2.north) + (0,0.25cm)$) {$\sigma=2.0$};
+	\node at ($(1/L3.north) + (0,0.25cm)$) {$\sigma=2.8284$};
+	\node at ($(1/L4.north) + (0,0.25cm)$) {$\sigma=4.0$};
+	\node at ($(1/L5.north) + (0,0.25cm)$) {$\sigma=5.6569$};	
+    
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node [circle,draw=black,inner sep=0cm] (1/L\s/L\t) at ($ (1/L\s.south)!0.5!(1/L\t.south) - (0 cm,1 cm) $) {+};
+		\draw [->] (1/L\s.south) to [bend right] node [inner sep=1pt,draw=black,midway,fill=white,inner sep=2pt] {-1} (1/L\s/L\t.west);
+		\draw [->] (1/L\t.south) to [bend left] (1/L\s/L\t.east);
+	}    
+	
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node[inner sep=0pt] (1/DoG\s) at ($ (1/L\s/L\t.south) - (0 cm,1.25 cm) $)
+    		{\includegraphics[width=1.25cm]{dog-octave-1-scale-\t,\s}};
+    	\draw [->] (1/L\s/L\t.south) to (1/DoG\s.north);
+	}
+    
+	\foreach \s/\t/\u in {1/2/3,2/3/4}	
+	{    
+    	\node [draw=black,inner sep=3pt] (1/DoG/\s/\t/\u) at ($ (1/DoG\t.south) - (0 cm,1.5 cm) $) {Extrema};
+		\draw [->] (1/DoG\s.south) to (1/DoG/\s/\t/\u.north west);
+		\draw [->] (1/DoG\u.south) to (1/DoG/\s/\t/\u.north east);
+		\draw [->] (1/DoG\t.south) to (1/DoG/\s/\t/\u.north);
+	}    
+    
+    \end{scope}
+    
+    
+    
+    
+    
+    \begin{scope}[local bounding box=octave2,shift={($(octave1.south)+(0cm,-2cm)$)}]
+	\foreach \s [evaluate=\s as \x using (\s-3)*3] in {1,2,...,5}
+	{
+		\node[inner sep=0pt] (2/L\s) at (\x, 0cm)
+    		{\includegraphics[width=0.75cm]{l-octave-2-scale-\s}};
+    }
+
+   	\node at ($(2/L1.north) + (0,0.25cm)$) {$\sigma=2.8284$};
+   	\node at ($(2/L2.north) + (0,0.25cm)$) {$\sigma=4.0$};
+	\node at ($(2/L3.north) + (0,0.25cm)$) {$\sigma=5.6569$};
+	\node at ($(2/L4.north) + (0,0.25cm)$) {$\sigma=8.0$};
+	\node at ($(2/L5.north) + (0,0.25cm)$) {$\sigma=11.3137$};	
+
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node [circle,draw=black,inner sep=0cm] (2/L\s/L\t) at ($ (2/L\s.south)!0.5!(2/L\t.south) - (0 cm,1 cm) $) {+};
+		\draw [->] (2/L\s.south) to [bend right] node [inner sep=1pt,draw=black,midway,fill=white,inner sep=2pt] {-1} (2/L\s/L\t.west);
+		\draw [->] (2/L\t.south) to [bend left] (2/L\s/L\t.east);
+	}        
+	
+	\foreach \s/\t in {1/2,2/3,3/4,4/5}	
+	{    
+    	\node[inner sep=0pt] (2/DoG\s) at ($ (2/L\s/L\t.south) - (0 cm,1.0 cm) $)
+    		{\includegraphics[width=0.75cm]{dog-octave-2-scale-\t,\s}};
+    	\draw [->] (2/L\s/L\t.south) to (2/DoG\s.north);
+	}
+	
+	\foreach \s/\t/\u in {1/2/3,2/3/4}	
+	{    
+    	\node [draw=black,inner sep=3pt] (2/DoG/\s/\t/\u) at ($ (2/DoG\t.south) - (0 cm,1.25 cm) $) {Extrema};
+		\draw [->] (2/DoG\s.south) to (2/DoG/\s/\t/\u.north west);
+		\draw [->] (2/DoG\u.south) to (2/DoG/\s/\t/\u.north east);
+		\draw [->] (2/DoG\t.south) to (2/DoG/\s/\t/\u.north);
+	}    
+    
+    \end{scope}
+	
+    \draw [decorate,decoration={brace,raise=0.5cm,amplitude=0.25cm}]
+(-1cm,-7.5cm) -- (-1cm,1.75cm) node [black,midway,above,rotate=90,yshift=0.75cm] {(optional) Oktave -1 (Größe $\times 2$)};
+
+    \draw [decorate,decoration={brace,raise=0.5cm,amplitude=0.25cm}]
+(-1cm,-15.0cm) -- (-1cm,-8.25cm) node [black,midway,above,rotate=90,yshift=0.75cm] {Oktave 0 (Größe $\times 1.0$)};
+
+    \draw [decorate,decoration={brace,raise=0.5cm,amplitude=0.25cm}]
+(-1cm,-21.75cm) -- (-1cm,-16.1cm) node [black,midway,above,rotate=90,yshift=0.75cm] {Oktave 1 (Größe $\times 0.5$)};
+
+
+	
+	
+\end{tikzpicture}
+\end{document}
