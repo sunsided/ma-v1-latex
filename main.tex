@@ -1120,10 +1120,10 @@ wodurch sich für alle $k=1$ (d.h. ein Vervielfachen der Standardabweichung um $
 sowie für alle $1<k<\sqrt{2}$ eine Reduktion der notwendigen Standardabweichung erreicht wird.
 Die Funktion $\sqrt{k^2+1}$ erreicht bei $k=\sqrt{2}$ den Wert $1$,
 wodurch für höhere $k$ entsprechend größere Filter benötigt werden. Eine Beispielimplementierung in \MATLAB findet sich in \cref{lst:matlab_scalespace_sigma}.
-\Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der benötigten Skalen $S$ als
+\Cite{lowe2004distinctive} definiert $k$ als eine Funktion der Anzahl der geforderten Skalen $s$ als
 %
 \begin{align}
-k &= 2^{\sfrac{1}{S}} \label{eq:k_by_s}
+k &= 2^{\sfrac{1}{s}} \label{eq:k_by_s}
 \end{align}
 %
 so dass für alle $s>2$ ein wünschenswerter Effekt eintritt, während für $s=2$ die Wurzel in \cref{eq:relative_sift_sigma} verschwindet\todo{Verweis auf notwendige Anzahl der Skalen für DoG-Extremafindung}.
@@ -1145,12 +1145,12 @@ durchgeführt wird (\cite{vlfeat:online:2016}, vgl. \cref{eq:sift_deconv}), wodu
 s                     = 3;
 k                     = 2^(1/s);
 sigma_0               = 1.6;
-P                     = s+3;
+S                     = s+3;
 
 sigma_current         = sigma_0;
 sigma_total(1)        = sigma_current;
 
-for p=0:(P-1)
+for p=0:(S-1)
     % Direkte Ermittlung von /*@$\sigma_{p+1}$@*/ gemäß Gleichung /*@\labelcref{eq:sift_sigman}@*/
     sigma_direct      = k^p * sigma_0;
     
