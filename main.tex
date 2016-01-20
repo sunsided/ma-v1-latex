@@ -914,32 +914,6 @@ Zusätzliche Entwicklung mit \algo{MI-SIFT}.
 
 \url{http://dsp.stackexchange.com/questions/28312} Eigene Frage zu $\sigma=0.5$ bezüglich \cite{lowe2004distinctive}.
 
-\begin{figure}
-	\centering
-	\begin{subfigure}[b]{\textwidth}
-		\centering
-		\includestandalone{kernels/laplacian-of-gaussian}
-		\caption{LoG: Erste und zweite Ableitung einer Gaußfunktion mit $\mu=0, \sigma=1.6$.}
-		\label{fig:log}
-	\end{subfigure}	
-
-	\begin{subfigure}[b]{\textwidth}
-		\centering
-		\includestandalone{kernels/difference-of-gaussian}
-		\caption{DoG: Differenz zweier Gaußfunktionen $g(x)$ mit $\mu=0$ und  unterschiedlichem $\sigma$ im Verhältnis $1:1.6$.}
-		\label{fig:dog}
-	\end{subfigure}
-	
-	\begin{subfigure}[b]{\textwidth}
-		\centering
-		\includestandalone{kernels/log-dog-error}
-		\caption{Fehler der DoG-Approximation bei $\sigma$-Verhältnissen von $1:1.6$ ($\sigma_{D}=1.0$), $1:1.3$ ($\sigma_{D}=1.2$) und $1:1.23$ ($\sigma_{D}=1.3$).}
-	\end{subfigure}
-	
-	\caption{Laplacian-of-Gaussian (LoG) und Difference-of-Gaussian (DoG)}
-	\label{fig:log-vs-dog}
-\end{figure}
-
 \chapter{Scale-Invariant Feature Transform}
 
 Scale-Invariant Feature Transform (\algo{SIFT}), zu Deutsch "`Skaleninvariante Merkmalstransformation"', 
@@ -1055,12 +1029,24 @@ mit $k>1$, wobei für eine gute Approximation üblicherweise $k \approx 1.6$ ang
 \section{Berechnung des Skalenraumes}
 \label{subsec:scale_space_sift}
 
-Die Berechnung der Skalenbilder wird unterteilt in mehrere Oktaven $O$, sowie einer Anzahl von Skalen $S$ pro Oktave.
-Ausgehend von einer Basisglättung $\sigma_0$ (Skale 0) wird nun für alle $s=1,2,\dots,S$ je Oktave das Ursprungsbild $I$ mit dem Vielfachen $k^s \sigma_0$ geglättet, 
-wobei $k$ eine noch festzulegende Konstante darstellt (\cref{eq:k_by_s}).
-Ein Vorteil der Unterteilung der Berechnung in Oktaven ergibt sich aus dem Umstand, 
-dass die relative Genauigkeit eines mit $3.5\sigma$ gefilterten Bildes sich nicht wesentlich von der Genauigkeit einer mit $2\sigma$ gefilterten in der Größe halbierten Version des mit $2\sigma$ gefilterten Bildes unterscheidet (\cite{lowe2004distinctive}, vgl. \cite{shah:online:2012});
-durch die Reduktion der Bildfläche um Faktor vier wird der erforderliche Rechenaufwand mit jeder Oktave drastisch reduziert. \Cref{fig:sift_scales} verdeutlicht die Vorgehensweise an einem Beispiel mit $S=5$ Skalen pro Oktave, sowie insgesamt $O=3$ Oktaven.
+Die Berechnung der Skalenbilder wird unterteilt in $n_{oct}$ Oktaven, sowie einer Anzahl $n_{spo}$ Skalen pro Oktave.
+Ausgehend von einer dem Ursprungsbild intrinsischen Grundglättung $\sigma_{min}$ wird nun für alle $s=1,\dots,n_{spo}$ je Oktave das Ursprungsbild $I$ mit dem Vielfachen $k^s \sigma_{min}$ geglättet, 
+wobei $k$ eine noch festzulegende Konstante darstellt (z.B. \cref{eq:k_by_s}).
+
+Das Unterteilen der Skalenberechnung in Oktaven begründet sich in dem in den \cref{fig:gaussian_sigma_delta,fig:gaussian_sigma_delta-3d} verdeutlichten Sachverhalt,
+dass die relative Unschärfe eines mit  $\sigma$ weichgezeichneten Bildes stets in Bezug zur Interpixeldistanz $\delta$ der betrachteten Skale des Bildes (und damit dessen Fläche) steht; spezifisch:
+ein Paar ${\sigma,\delta}$ einer Skale entspricht einem kleineren $\hat\sigma = \frac{1}{\lambda} \sigma$ mit antiproportional größerer Interpixeldistanz $\hat\delta = \lambda \delta$.
+Sei $S_\delta$ ein linearer Sampling-Operator, der das Bild in $\delta$-Schritten abtastet und $S_2$ folglich eine Verkleinerung des Bildes um Faktor $2$ (die Bildfläche wird geviertelt), so gilt
+%
+\begin{align}
+\mat G_{Gauss}(\frac{1}{\delta} \sigma) \ast \fun S_\delta \mat I \Longleftrightarrow \fun S_\delta \parens{ \mat G_{Gauss}(\sigma) \ast \mat I }
+\end{align}
+%
+Durch die Reduktion der Bildfläche um Faktor $\delta^2$ wird dabei der erforderliche Rechenaufwand für die Verarbeitung mit jeder Oktave reduziert (\cite{lowe2004distinctive,ipol.2014.82}, vgl. \cite{shah:online:2012}).
+
+\todo[inline]{sanity check}
+
+\Cref{fig:sift_scales} verdeutlicht die Vorgehensweise von \algo{SIFT} an einem Beispiel mit $S=5$ Skalen pro Oktave, sowie insgesamt $O=3$ Oktaven.
 
 Da durch die initiale Glättung des Bildes $\mat I$ mit $\sigma_0$ bereits Informationen in den hohen Frequenzen des Bildes verworfen werden,
 wird das Eingangsbild zunächst in der Größe verdoppelt und mit einem (nicht näher spezifizierten) kleinen $\sigma$ geglättet. 
@@ -1169,10 +1155,57 @@ direct_sigma, sigma_total, relative_sigma
 
 \begin{figure}
 	\centering
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/laplacian-of-gaussian}
+		\caption{LoG: Erste und zweite Ableitung einer Gaußfunktion mit $\mu=0, \sigma=1.6$.}
+		\label{fig:log}
+	\end{subfigure}	
+
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/difference-of-gaussian}
+		\caption{DoG: Differenz zweier Gaußfunktionen $g(x)$ mit $\mu=0$ und  unterschiedlichem $\sigma$ im Verhältnis $1:1.6$.}
+		\label{fig:dog}
+	\end{subfigure}
+	
+	\begin{subfigure}[b]{\textwidth}
+		\centering
+		\includestandalone{kernels/log-dog-error}
+		\caption{Fehler der DoG-Approximation bei $\sigma$-Verhältnissen von $1:1.6$ ($\sigma_{D}=1.0$), $1:1.3$ ($\sigma_{D}=1.2$) und $1:1.23$ ($\sigma_{D}=1.3$).}
+	\end{subfigure}
+	
+	\caption{Laplacian-of-Gaussian (LoG) und Difference-of-Gaussian (DoG)}
+	\label{fig:log-vs-dog}
+\end{figure}
+
+\begin{figure}
+	\centering
 	\includestandalone{kernels/gaussian-at-sigma}
 	\caption{Werte des Gaußkernes in Entfernungen von $k\sigma$}
 	\caption*{Die Wahrscheinlichkeitsdichtefunktion der Normalverteilung $g_{Gauss}(x,\sigma|\mu=0)$ evaluiert an $x=k\sigma$ für variable $\sigma$. Werte kleine $10^0$ stellen Abschwächungen des Signales dar. Für $k=3, \sigma=1$ stellt sich bereits eine Abschwächung um mehr als $10^{-2}$ ein; bei einer Abschwächung um ca. $2\cdot 10^{-3}$ sind \SI{8}{\bit}-Intensitätswerte durch Diskretisierungseffekte vollständig unterdrückt.}
 	\label{fig:gaussian_at_sigma}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includestandalone{kernels/gaussian-sigma-delta}
+	\caption{Zusammenhang von Standardabweichung $\sigma$ und Interpixeldistanz $\delta$}
+	\caption*{Normierte Varianten des eindimensionalen Gaußfilters mit unterschiedlichen $\sigma$ über unterschiedlichen Interpixeldistanzen $\delta$. Dieselben Funktionswerte sind für die jeweiligen Interpixeldistanzen $\delta=1$ (Vierecke), $\delta=0.5$ (Dreiecke) und $\delta=2$ (Kreise) markiert. Wird die Interpixeldistanz halbiert (das Bild um Faktor zwei vergrößert), muss die Standardabweichung verdoppelt werden, um dieselbe Filterwirkung zu erzielen; siehe auch \cref{fig:gaussian_sigma_delta-3d}.}
+	\label{fig:gaussian_sigma_delta}
+\end{figure}
+
+\pgfplotsset{
+colormap={whitered}{color(0cm)=(white); color(1cm)=(black!75!blue)}
+}
+
+\begin{figure}
+	\centering
+	\includestandalone{kernels/gaussian-sigma-delta-3d}
+	
+	\caption{Zweidimensionaler Gaußfilter über Pixelraster}
+	\caption*{Zweidimensionaler Gaußfilter mit Standardabweichung $\sigma_x=\sigma_y=1$ und $\mu=0$. Die Wahl von $\sigma$ ist von der Interpixeldistanz $\delta$ abhängig (hier $\delta=1$); in Bezug auf das überlagerte dunklere Raster ($\delta=0.5$, vgl. \cref{fig:gaussian_sigma_delta}) wird eine geringere Fläche abgedeckt, die Wirkung der Filterung ist schwächer.}
+	\label{fig:gaussian_sigma_delta-3d}
 \end{figure}
 
 \section{Merkmalserkennung im Skalenraum}

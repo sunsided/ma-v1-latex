@@ -1,0 +1,143 @@
+\documentclass[crop,tikz]{standalone}
+
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[margin=0cm,nohead]{geometry}
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{calc}
+
+\pgfplotsset{compat=1.13}
+
+\begin{document}
+\begin{tikzpicture}
+	\begin{axis}[
+		scale=1.5,
+		y=4cm,
+		legend style={legend pos=north west},
+%		ymin=-0.3, ymax=0.5,
+		ytick pos=left,
+		xtick pos=left,
+		xtickmin=-3,xtickmax=3,
+%		ymajorgrids,
+%		xmajorgrids,
+		xlabel = {$x$},
+		xmin=-4, xmax=4,
+		every outer x axis line/.append style=
+			{-stealth},
+		every outer y axis line/.append style=
+			{-stealth},
+	]
+			
+	\draw[ultra thin,black!25] (axis cs:0,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:0,\pgfkeysvalueof{/pgfplots/ymax});			
+	\draw[ultra thin,black!25] (axis cs:1,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:1,\pgfkeysvalueof{/pgfplots/ymax});			
+	\draw[ultra thin,black!25] (axis cs:0.5,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:0.5,\pgfkeysvalueof{/pgfplots/ymax});
+	\draw[ultra thin,black!25] (axis cs:1.5,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:1.5,\pgfkeysvalueof{/pgfplots/ymax});
+	\draw[ultra thin,black!25] (axis cs:2,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:2,\pgfkeysvalueof{/pgfplots/ymax});
+	\draw[ultra thin,black!25] (axis cs:3,\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:3,\pgfkeysvalueof{/pgfplots/ymax});
+	
+	\draw[ultra thin,black!25] (axis cs:\pgfkeysvalueof{/pgfplots/xmin},0.6) -- (axis cs:\pgfkeysvalueof{/pgfplots/xmax},0.6);
+	\draw[ultra thin,black!25] (axis cs:\pgfkeysvalueof{/pgfplots/xmin},0.324) -- (axis cs:\pgfkeysvalueof{/pgfplots/xmax},0.324);	
+	\draw[ultra thin,black!25] (axis cs:\pgfkeysvalueof{/pgfplots/xmin},0.135) -- (axis cs:\pgfkeysvalueof{/pgfplots/xmax},0.135);	
+			
+	\addplot[id=Gauss1,
+			solid,
+			black,
+			samples=100,
+			domain=-5:5] 
+		gnuplot{
+%			  1/(1*sqrt(2*pi))*
+			  exp(-(x**2)/(2*1**2))
+			};
+	\addlegendentry{$\sigma=1.0$};
+	
+	\addplot[id=Gauss05,
+			dashdotted,
+			blue,
+			samples=100,
+			domain=-5:5] 
+		gnuplot{
+%			  1/(0.5*sqrt(2*pi))*
+			  exp(-(x**2)/(2*0.5**2))
+			};
+	\addlegendentry{$\sigma=0.5$};
+	
+	\addplot[id=Gauss3,
+			dashed,
+			red,
+			samples=100,
+			domain=-5:5] 
+		gnuplot{
+%			  1/(2*sqrt(2*pi))*
+			  exp(-(x**2)/(2*2**2))
+			};
+	\addlegendentry{$\sigma=2.0$};	
+	
+	\addplot[mark=square*,black] coordinates {(1,0.6)};
+	\addplot[mark=square*,red] coordinates {(2,0.6)};
+	\addplot[mark=square*,blue] coordinates {(0.5,0.6)};
+  
+	\addplot[mark=triangle*,black] coordinates {(1.5,0.324)};
+	\addplot[mark=triangle*,red] coordinates {(3,0.324)};
+	\addplot[mark=triangle*,blue] coordinates {(0.75,0.324)};
+	
+	\addplot[mark=*,black] coordinates {(2,0.134)};
+	\addplot[mark=*,blue] coordinates {(1,0.134)};
+
+
+	\end{axis}
+	
+	\begin{axis}[
+		hide y axis, 
+		%tick align=outside,
+		axis x line*=middle,
+        ytick=\empty,
+        xtick=\empty,
+		scale=1.5,
+		y=4cm,
+		yshift=0.0cm,
+		x label style={at={(axis description cs:1,0)},anchor=west},
+      	xlabel={$\delta=1.0 \Leftrightarrow \sigma=1.0$},
+      	xmin=-4, xmax=4,
+    	]
+    	\addplot[draw=none]{1};
+    \end{axis}	
+	
+	\begin{axis}[
+		hide y axis, 
+		%tick align=outside,
+		axis x line*=middle,
+        ytick=\empty,
+		scale=1.5,
+		y=4cm,
+		yshift=-2.0cm,
+		x label style={at={(axis description cs:1,0)},anchor=west},
+      	xlabel={$\delta=2.0 \Leftrightarrow \sigma=0.5$},
+      	xmin=-8, xmax=8,
+    	]
+    	\addplot[draw=none]{1};
+    \end{axis}
+    
+	\begin{axis}[
+		hide y axis, 
+		%tick align=outside,
+		axis x line*=middle,
+        ytick=\empty,
+		scale=1.5,
+		y=4cm,
+		yshift=-1.0cm,
+		x label style={at={(axis description cs:1,0)},anchor=west},
+      	xlabel={$\delta=0.5 \Leftrightarrow \sigma=2.0$},
+      	xmin=-2, xmax=2,
+    	]
+    	\addplot[draw=none]{1};
+    \end{axis}
+	
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,75 @@
+\documentclass[crop,tikz]{standalone}
+
+\usepackage{pgfplots}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage[margin=0cm,nohead]{geometry}
+
+\usepackage[active,tightpage]{preview}
+\PreviewEnvironment{tikzpicture}
+
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{calc}
+
+\pgfplotsset{compat=1.13}
+
+\pgfplotsset{
+colormap={whitered}{color(0cm)=(white); color(1cm)=(black!75!blue)}
+}
+
+% http://tex.stackexchange.com/a/31715/11337
+
+\begin{document}
+\begin{tikzpicture}[
+    declare function={mu1=0;},
+    declare function={mu2=0;},
+    declare function={sigma1=1;},
+    declare function={sigma2=1;},
+    declare function={normal(\m,\s)=1/(2*\s*sqrt(pi))*exp(-(x-\m)^2/(2*\s^2));},
+    declare function={bivar(\ma,\sa,\mb,\sb)=
+        1/(2*pi*\sa*\sb) * exp(-((x-\ma)^2/\sa^2 + (y-\mb)^2/\sb^2))/2;}]
+        
+\pgfplotsset{scaled ticks = false}
+
+\begin{axis}[
+    colormap name=whitered,
+    width=\textwidth,
+    view={45}{65},
+    enlargelimits=false,
+    grid=major,
+    domain=-4:4,
+    y domain=-4:4,
+    samples=17,
+    xlabel=$x$,
+    ylabel=$y$,
+    zlabel={$g(\sigma_x = \sigma_y) \ast I_{x,y}$},
+    colorbar,
+    colorbar style={
+        at={(0,0)},
+        anchor=south east,
+        y tick label style={/pgf/number format/fixed},
+        height=0.25*\pgfkeysvalueof{/pgfplots/parent axis height},
+        title={$g \ast I$}
+    }
+]
+
+\addplot3 [surf] {bivar(mu1,sigma1,mu2,sigma2)};
+\addplot3 [domain=-4:4,samples=31, samples y=0, thick, smooth] (x,4,{normal(mu1,sigma1)});
+\addplot3 [domain=-4:4,samples=31, samples y=0, thick, smooth] (-4,x,{normal(mu2,sigma2)});
+
+\draw [black!50] (axis cs:-4,0,0) -- (axis cs:4,0,0);
+\draw [black!75] (axis cs:-4,2,0) -- (axis cs:4,2,0);
+\draw [black!75] (axis cs:-4,-2,0) -- (axis cs:4,-2,0);
+
+\draw [black!50] (axis cs:0,-4,0) -- (axis cs:0,4,0);
+\draw [black!75] (axis cs:2,-4,0) -- (axis cs:2,4,0);
+\draw [black!75] (axis cs:-2,-4,0) -- (axis cs:-2,4,0);
+
+\node at (axis cs:-4,-1.5,0.058) [pin=165:$g(\sigma_y)$] {};
+\node at (axis cs:1.25,4,0.132) [pin=-15:$g(\sigma_x)$] {};
+\end{axis}
+
+\end{tikzpicture}	
+\end{document}
