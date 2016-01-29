@@ -1236,6 +1236,40 @@ Pixel, die das Extremum ihrer $\SI{28}{\px}$-Umgebung sind, sind ein Merkmal in 
 \clearpage
 \pagenumbering{Roman}
 \appendix
+
+\chapter{Builds}
+
+\section{MongoDB C++ Driver}
+
+Für alle Builds kamen CMake 3.4 und Visual Studio 2015  unter Windows 10 zum Einsatz,
+wobei für die Intel x64-Architektur kompiliert wurde.
+
+Da die CMake-Konfigurationen der folgend aufgelisteten Bibliotheken hinsichtlich der Nomenklatur der Ausgabedateien keine Unterscheidung zwischen Release- und Debugbuilds durchführen, 
+dies unter Windows jedoch bezüglich der unterschiedlichen Laufzeitumgebungen für Release- und Debugbuilds (\texttt{msvcp140.dll} und \texttt{msvcp140d.dll}) zu Problemen führen kann,
+wurden separate Builds für beide Konfigurationen in unterschiedliche Zielordner ausgeführt.
+
+\todo[inline]{Docker based builds}
+
+\subsection{libbson}
+
+\texttt{libbson} 1.3 wurde aus den git-Sourcen gebaut (\url{https://github.com/mongodb/libbson}, commit SHA \texttt{d5b0533f\-79855fc5\-d0393009\-ed902d2e\-d0b36336} vom 18. Januar 2016).
+CMake-Builds dieses Stands werden fälschlicherweise als Version 1.0 ausgegeben.
+
+\subsection{libmongoc}
+
+\texttt{libmongoc} 1.3.2-dev ("`\texttt{mongo-driver-c}"') wurde aus den git-Sourcen gebaut (\url{https://github.com/mongodb/mongo-c-driver}, commit SHA \texttt{5f0720ed\-19cdeebf\-170e50fb\-ef39f5f6\-d81de6db} vom 27. Januar 2016). 
+Hierzu wurde \texttt{libbson} dynamisch gelinkt (\texttt{bson-1.0.lib}).
+CMake-Builds dieses Stands werden fälschlicherweise als Version 1.0 ausgegeben.
+
+\subsection{mongo-cxx-driver}
+
+\texttt{mongo-cxx-driver} 3.0.1-rc0 wurde aus den git-Sourcen gebaut (\url{https://github.com/mongodb/mongo-cxx-driver}, commit SHA \texttt{46bad97f\-4d908cd9\-e13222cc\-3d6ba6ca\-d5625e64} vom 24. Januar 2016). 
+Der Build erfolgte gegen die obigen \texttt{libbson} und \texttt{libmongoc}, sowie Boost 1.60.0 (\url{http://www.boost.org/}, Release vom 17. Dezember 2015).
+
+\section{OpenCV 3.1}
+
+\todo[inline]{add}
+
 \backmatter
 
 \clearpage
