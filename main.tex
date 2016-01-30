@@ -1225,7 +1225,7 @@ wobei sich zwei "`benachbarte"' Suchen je drei Skalen teilen. \Cref{fig:sift_sca
 	\centering
 	\includestandalone{sift-scales/sift-scales}
 	\caption{Extremadetektion im Scale-Space mittels Difference-of-Gaussian}
-	\caption*{\algo{SIFT}-Featuredetektion im Skalenraum: $s=2$, $\sigma_0=0.5\sqrt{2}$, $\sigma_n=0$, $k=2^{\sfrac{1}{s}}=\sqrt{2}$. Drei Oktaven zu je $s+3=5$ Skalen; Aus je zwei Skalen wird ein DoG-Bild generiert, in je drei DoG-Bildern werden dreidimensionale Extrema detektiert. Ein Pixel, das ein Extremum in der lokalen, sowie der darüber- und darunterliegenden Skale ist, ist ein \textit{keypoint}.}
+	\caption*{\algo{SIFT}-Featuredetektion im Skalenraum: $s=2$, $\sigma_0=\sigma_{min}=0.5\sqrt{2}$, $\sigma_n=0$, $k=2^{\sfrac{1}{s}}=\sqrt{2}$. Drei Oktaven zu je $s+3=5$ Skalen; Aus je zwei Skalen wird ein DoG-Bild generiert, in je drei DoG-Bildern werden dreidimensionale Extrema detektiert. Ein Pixel, das ein Extremum in der lokalen, sowie der darüber- und darunterliegenden Skale ist, ist ein \textit{keypoint}.}
 	\label{fig:sift_scales}
 \end{figure}
 
