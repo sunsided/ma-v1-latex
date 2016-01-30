@@ -168,6 +168,7 @@
 \newcommand{\fun}{\mathit}
 \newcommand{\transp}{^{\mathstrut\scriptscriptstyle{\top}}}
 \DeclareMathOperator*{\argmin}{\arg\!\min}
+\DeclareMathOperator*{\median}{median}
 \newcommand{\thetavec}{\ensuremath{\vec{\theta}}}
 \newcommand{\order}[1]{\ensuremath{\mathcal{O}(#1)}}
 \newcommand{\mean}[1]{\ensuremath{\bar{#1}}}
@@ -626,6 +627,50 @@ Ein wünschenswerter Zustand ist es, Bildteile stattdessen entsprechend ihrer Wi
 \end{align}
 %
 Hierbei entsprechen die beiden Teilsummen den partiellen Ableitungen des Bildes in $x$- und $y$-Richtung.
+
+\subsection{Umsetzung in der Vorverarbeitung}
+
+Um die Vorgabe eines festen Schwellenwertes zu vermeiden,
+werden die Randbereiche $\mat R_I$ des Bildes $\mat I$ ausgewertet,
+wobei ein empirisch festgelegter Bereich von $\sfrac{1}{5}$ der Bildbreite und Höhe auf jeder Seite untersucht wird (in \cref{lst:matlab_energy_generate_energy} für direkte Schwellenwerte auf Intensitäten: $\sfrac{1}{6}$).
+Der Median und die Standardabweichung der Werte wird ermittelt und der Offset $\mu$, sowie die Toleranz $\tau$ des Beschnitts ebenfalls empirisch wie folgt ermittelt:
+%
+\begin{align}
+\mu &= 0 \\
+\tau &= \median \mat R_I + 4 \sigma_R
+\end{align}
+%
+wobei die Festlegung $\mu {=} 0$ gemäß \cref{eq:seamEnergy1} auf der Grundlage beruht, dass ein "`energiefreies"' Pixel den Wert $0$ besitzt.
+In \cref{lst:matlab_energy_generate_energy} wurde für die Schwellenwerte der Intensitäten $\mu = \median \mat R_I$, sowie $\tau = \sqrt{\sigma_R}$ definiert, da sich hierbei in experimentellen Simulationen ein minimal besseres Ergebnis im Sinne des mittleren quadratischen Fehlers einstellte.
+Die \Cref{fig:energycrop_real,fig:energycrop_simple} verdeutlichen das Verfahren,
+wobei \cref{fig:energycrop_cumsum,fig:energycrop_toeplitz} anhand von synthetischen Testfällen die Schwachstellen des Beschnitts auf Intensitäten gegenüber dem Beschnitt auf den (differenzierenden) Energiewerten aufzeigen.
+Die Ermittelung der Beschnittbereiche geschieht grundsätzlich gemäß wie folgt:
+%
+\begin{enumerate}
+  \item Von links suchend wird die oberste Bildzeile $y_{top}$ ermittelt, deren Pixelwerte den Bereich $\mu \pm \tau$ verlassen.
+  \item Von links suchend wird die unterste Bildzeile $y_{bottom}$ (bis ausschließlich $y_{top}$) ermittelt, deren Pixelwerte den Bereich $\mu \pm \tau$ verlassen.
+  \item Von oben suchend wird die linkeste Bildspalte $x_{left}$ zwischen $y_{top}$ und $y_{bottom}$ ermittelt, deren Pixelwerte den Bereich $\mu \pm \tau$ verlassen.
+  \item Von oben suchend wird die rechteste Bildspalte $x_{right}$ (bis ausschließlich $x_{left}$) wird zwischen $y_{top}$ und $y_{bottom}$ ermittelt, deren Pixelwerte den Bereich $\mu \pm \tau$ verlassen.
+\end{enumerate}
+%
+Durch diese Vorgehensweise ist der Aufwand nur für den ersten Schritt maximal,
+für die folgenden Schritte wird der zu durchsuchende Bereich sukzessive eingeschränkt.
+Ein alternatives und effizienteres Vorgehen wäre das Durchsuchen des Bildes in initial diagonaler Richtung, gefolgt von einem "`backtracking"' gemäß des obigen Vorgehens in umgekehrter Richtung; 
+dies setzt jedoch die (nicht zulässige) Grundannahme voraus,
+dass das Bild einen soliden, zusammenhängenden Anteil besitzt, der durch die Bildmitte läuft.
+Da die Art der Eingangsbilder nicht a priori bekannt ist, wird auf dieses Vorgehen verzichtet.
+
+Das beschriebene spaltenweise Scannen des Bildes für $x_{left}$ und $x_{right}$ ist ein prinzipiell ineffizientes Verfahren, 
+da mit jeder Selektion einer neuen Bildspalte ein cache miss riskiert wird, bei dem die Zeile zeitaufwändig aus dem Arbeitsspeicher nachgeladen werden muss.
+Eine Möglichkeit besteht in der Transponierung des Bildblockes zwischen  $y_{top}$ und $y_{bottom}$, so dass die Spalten nun zeilenweise durchsucht werden können.
+Umgesetzt wurde stattdessen folgender Ansatz:
+%
+\begin{enumerate}
+  \item Von links suchend wird die linkeste Bildspalte $x_{left}$ zwischen $y_{top}$ und $y_{bottom}$ ermittelt, deren Pixelwerte den Bereich $\mu \pm \tau$ verlassen, wobei der Suchbereich sukzessive auf $0 \dots x_{left}$ eingeschränkt wird.
+  \item Von rechts suchend wird die rechteste Bildspalte $x_{right}$ (bis ausschließlich $x_{left}$) zwischen $y_{top}$ und $y_{bottom}$ ermittelt, wobei der Suchbereich sukzessive auf $x_{right} \dots N$ eingeschränkt wird.
+\end{enumerate}
+%
+\Cref{lst:matlab_energy_box} verdeutlicht das Vorgehen.
 
 \subsection{Eindimensionale Faltung zur approximativen Differenzierung}
 
@@ -1240,6 +1285,564 @@ Pixel, die das Extremum ihrer $\SI{28}{\px}$-Umgebung sind, sind ein Merkmal in 
 \clearpage
 \pagenumbering{Roman}
 \appendix
+
+\chapter{Algorithmen und Abbildungen}
+
+\section{Energy-Based Retargeting}
+
+\begin{lstlisting}[style=matlab,caption={Ermittelung des Schwellenwertes für den Energiebeschnitt}, label=lst:matlab_energy_threshold]
+function [ t, m, s, border_energies ] = energyThreshold( J, subdivision )
+    if ~exist('subdivision', 'var')
+        subdivision = 5;
+    end
+
+    [M, N]   = size(J);
+    height   = floor(M/subdivision);
+    width    = floor(N/subdivision);
+    
+    J_top    = J(1:height,:);
+    J_bottom = J(M-height:M,:);
+    J_left   = J(height:M-height-1, 1:width);
+    J_right  = J(height:M-height-1, N-width-1:N);
+
+    border_energies = [ reshape(J_top,1,[]),  reshape(J_bottom,1,[]), ...
+                        reshape(J_left,1,[]), reshape(J_right,1,[]) ];
+
+    m = median(border_energies);
+    s = std(border_energies);
+    t = m + 4*s;
+end
+\end{lstlisting}
+
+\begin{lstlisting}[style=matlab,caption={Ermittelung der Bounding Box anhand des Schwellwertes}, label=lst:matlab_energy_box]
+function [ box ] = findBoundingBox( I, threshold, level, offset )
+    [M, N] = size(I);
+    top  = 1 + offset;  left = 1 + offset;
+    right = N - offset; bottom = M - offset;
+    
+    % Scan "von oben nach unten" über alle Zeilen und Spalten
+    y_top = NaN;
+    for y=top:bottom
+        for x=left:right
+            if abs(I(y,x)-level) < threshold;   continue;   end;
+            y_top = y;
+            break;
+        end
+        if ~isnan(y_top);   break;  end;
+    end
+    
+    % Fehler: Alle Intensitäten liegen innerhalb des Schwellwertes /*@$\tau$@*/
+    if isnan(y_top)
+        box = [ 1, 1, M, N ];
+        return;
+    end
+    
+    % Scan "von unten nach oben" bis /*@$y_{top}$@*/ über alle Spalten
+    y_bottom = NaN;
+    for y=bottom:-1:y_top
+        for x=left:right
+            if abs(I(y,x)-level) < threshold;   continue;   end;
+            y_bottom = y;
+            break;
+        end
+        if ~isnan(y_bottom);    break;  end;
+    end
+    
+    % Scan "von links nach rechts" im Bereich /*@$y_{top} \dots y_{bottom}$@*/
+    x_left = right;
+    for y=y_top:y_bottom
+        x = left;
+        while x <= x_left
+            if abs(I(y,x)-level) >= threshold;
+                x_left = x;
+            end
+            
+            x = x+1;
+            if x_left == left;  break;  end;
+        end
+        if x_left == left;  break;  end;
+    end
+    
+    % Scan "von rechts nach links" bis /*@$x_{left}$@*/ im Bereich /*@$y_{top} \dots y_{bottom}$@*/
+    x_right = left;
+    for y=y_top:y_bottom
+        x = right;
+        while x >= x_right
+            if abs(I(y,x)-level) >= threshold
+                x_right = x;
+            end
+            
+            x = x-1;
+            if x_right == right;    break;  end;
+        end
+        if x_right == right;    break;  end;
+    end
+    
+    box = [x_left, y_top, x_right, y_bottom];
+end
+\end{lstlisting}
+
+\begin{lstlisting}[style=matlab,caption={Generierung des synthetischen Testbildes für den Energiebeschnitt}, label=lst:matlab_energy_generate_test]
+M = 256;                    % Kantenlänge
+N = M;
+I = ones(M, N);             % /*@\cref{fig:energycrop_simple}@*/
+%I = cumsum(ones(N)/N, 2);  % /*@\cref{fig:energycrop_cumsum}@*/
+%I = toeplitz(1:N)/N;       % /*@\cref{fig:energycrop_toeplitz}@*/
+I(32:224, 32:224) = 0.9375; % hellgraue Box
+I(64:192, 32:224) = 0.875;  % hellgraue Box
+I(64:192, 32:224) = 0.875;  % hellgraue Box
+I(64:192, 64:192) = 0.75;   % hellgraue Box
+I(96:160, 64:192) = 0.5;    % hellgraue Box
+I(96:160, 96:160) = 0;      % schwarze Box
+
+E = 0.05*randn(N);          % zero-mean noise mit /*@$\sigma=0.05$@*/
+Ie = abs(I + E);            % Anwendung des Rauschens
+Ie(Ie>1) = 1;
+Ie(Ie<0) = 0;
+\end{lstlisting}
+
+\begin{lstlisting}[style=matlab,caption={Ermittelung des Energiebildes}, label=lst:matlab_energy_generate_energy]
+Gx = conv2(Ie, 0.125*[-1 0 1; -2 0 2; -1 0 1]);
+Gy = conv2(Ie, 0.125*[-1 -2 -1; 0 0 0; 1 2 1]);
+J = abs(Gx) + abs(Gy);
+J = J(1+2:M, 1+2:N);
+\end{lstlisting}
+
+\begin{lstlisting}[style=matlab,caption={Ermittelung der Beschnittbereiche}, label=lst:matlab_energy_generate_energy]
+% Intensitätsbeschnitt
+[~,m,s] = energyThreshold(Ie, 6);          % /*@\cref{lst:matlab_energy_threshold}@*/
+tI      = sqrt(s);
+vI      = m;
+boxI    = findBoundingBox(Ie, tI, vI, 0)   % /*@\cref{lst:matlab_energy_box}@*/
+
+% Energiebeschnitt
+J       = (J-min(J(:)))/(max(J(:))-min(J(:)));
+tJ      = energyThreshold(J);
+vJ      = 0;
+boxJ    = findBoundingBox(J, tJ, vJ, 0)
+\end{lstlisting}
+
+\clearpage
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/real/input}};
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+		\end{tikzpicture}
+        \caption{$\mat I$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/real/energy-inv}};   	
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);    	
+		\end{tikzpicture}
+        \caption{$1 - \mat J$}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.27\textwidth}
+	\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/real/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!138/1198!(BL)$);
+			\coordinate (YUR) at ($(TR)!138/1198!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!1063/1198!(BL)$);
+			\coordinate (YBR) at ($(TR)!1063/1198!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!123/1198!(TR)$);
+			\coordinate (XLB) at ($(BL)!123/1198!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!992/1198!(TR)$);
+			\coordinate (XRB) at ($(BL)!992/1198!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat I, \tau{=}0.157, \mu{=}1)$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/real/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!135/1198!(BL)$);
+			\coordinate (YUR) at ($(TR)!135/1198!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!1073/1198!(BL)$);
+			\coordinate (YBR) at ($(TR)!1073/1198!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!121/1198!(TR)$);
+			\coordinate (XLB) at ($(BL)!121/1198!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!993/1198!(TR)$);
+			\coordinate (XRB) at ($(BL)!993/1198!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat J, \tau{=}0.207, \mu{=}0)$}
+    \end{subfigure}
+           
+    \caption{Intensitäts- und Energieretargeting in einem Produktbild}
+    \caption*{Energiewerte $\mat J$ normalisiert (invertiert für bessere Anzeige). Toleranz $\tau$ und Offset $\mu$ ermittelt in den Randregionen des jeweiligen Eingangsbildes $\mat I$ und $\mat J$.
+    Beide Algorithmen beschneiden die Reflektion auf dem Untergrund,
+    bildwichtige Details bleiben erhalten.}
+    \label{fig:energycrop_real}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/simple/input}};
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+		\end{tikzpicture}
+        \caption{$\mat I$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/simple/energy-inv}};   	
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);    	
+		\end{tikzpicture}
+        \caption{$1 - \mat J$}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.27\textwidth}
+	\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/simple/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!64/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!64/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!214/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!214/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!32/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!32/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!224/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!224/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat I, \tau{=}0.046, \mu{=}0.986)$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/simple/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!30/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!30/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!223/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!223/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!30/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!30/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!224/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!224/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat J, \tau{=}0.154, \mu{=}0)$}
+    \end{subfigure}
+           
+    \caption{Intensitäts- und Energieretargeting auf homogenem Untergrund}
+    \caption*{Analog \cref{fig:energycrop_real}.
+    Beide Algorithmen liefern vergleichbare Ergebnisse und hängen stark
+    von der Natur der Störüberlagerung ab. Gewinnung von $\mu,\tau$ gemäß \cref{lst:matlab_energy_generate_energy}.}
+    \label{fig:energycrop_simple}
+\end{figure}
+
+
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/cumsum/input}};
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+		\end{tikzpicture}
+        \caption{$\mat I$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/cumsum/energy-inv}};   	
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);    	
+		\end{tikzpicture}
+        \caption{$1 - \mat J$}
+        \label{fig:energycrop_cumsum_energy}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.27\textwidth}
+	\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/cumsum/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!1/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!1/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!256/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!256/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!1/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!1/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!160/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!160/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat I, \tau{=}0.360, \mu{=}0.76)$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/cumsum/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!30/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!30/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!224/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!224/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!30/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!30/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!192/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!192/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat J, \tau{=}0.373, \mu{=}0)$}
+    \end{subfigure}
+           
+    \caption{Intensitäts- und Energieretargeting auf einfachem Intensitätsverlauf}
+    \caption*{Analog \cref{fig:energycrop_real}.
+    Die ermittelte Toleranz wirkt im Zusammenspiel mit Offset $\mu$. Durch seine differenzierende Natur ist der
+    Energiebeschnitt invariant gegenüber (sanften) Verläufen, jedoch ebenfalls nicht gegenüber geringen Kontrasten.}
+    \label{fig:energycrop_cumsum}
+\end{figure}
+
+
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/toeplitz/input}};
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+		\end{tikzpicture}
+        \caption{$\mat I$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+			\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/toeplitz/energy-inv}};   	
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);    	
+		\end{tikzpicture}
+        \caption{$1 - \mat J$}
+        \label{fig:energycrop_toeplitz_energy}
+    \end{subfigure}
+    
+    \begin{subfigure}[b]{0.27\textwidth}
+	\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/toeplitz/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!1/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!1/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!256/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!256/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!1/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!1/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!256/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!256/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat I, \tau{=}0.302, \mu{=}0.569)$}
+    \end{subfigure}
+    \qquad
+    \begin{subfigure}[b]{0.27\textwidth}
+		\begin{tikzpicture}
+    		\node[inner sep=0pt] (img) at (0,0)
+		    	{\includegraphics[width=\textwidth]{entropy_crop/toeplitz/input}};
+    
+			\draw[-,dotted] (img.north west) -- (img.north east);
+			\draw[-,dotted] (img.north west) -- (img.south west);
+			\draw[-,dotted] (img.south west) -- (img.south east);
+			\draw[-,dotted] (img.south east) -- (img.north east);
+
+			\coordinate (TL) at (img.north west);
+			\coordinate (BL) at (img.south west);
+			\coordinate (TR) at (img.north east);
+			\coordinate (BR) at (img.south east);
+
+			\coordinate (YUL) at ($(TL)!30/254!(BL)$);
+			\coordinate (YUR) at ($(TR)!30/254!(BR)$);
+			\draw[-,red] (YUL) -- (YUR);
+
+			\coordinate (YBL) at ($(TL)!224/254!(BL)$);
+			\coordinate (YBR) at ($(TR)!224/254!(BR)$);
+			\draw[-,red] (YBL) -- (YBR);
+			
+			\coordinate (XLT) at ($(TL)!30/254!(TR)$);
+			\coordinate (XLB) at ($(BL)!30/254!(BR)$);
+			\draw[-,red] (XLT) -- (XLB);
+
+			\coordinate (XRT) at ($(TL)!224/254!(TR)$);
+			\coordinate (XRB) at ($(BL)!224/254!(BR)$);
+			\draw[-,red] (XRT) -- (XRB);
+    	
+		\end{tikzpicture}
+        \caption{$C(\mat J, \tau{=}0.346, \mu{=}0)$}
+    \end{subfigure}
+           
+    \caption{Intensitäts- und Energieretargeting auf komplexem Intensitätsverlauf}
+    \caption*{Analog \cref{fig:energycrop_cumsum}.
+    Durch den bidirektionalen Verlauf des Hintergrundes ist kein allgemeingültiger Intensitäts-Schwellenwert ermittelbar; der Energiebeschnitt ist invariant gegenüber Verläufen (vgl. \cref{fig:energycrop_cumsum_energy,fig:energycrop_toeplitz_energy}).}
+    \label{fig:energycrop_toeplitz}
+\end{figure}
+
+
+
 
 \chapter{Softwarebibliotheken}
 
