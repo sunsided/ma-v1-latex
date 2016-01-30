@@ -1127,6 +1127,10 @@ praktisch mit
 %
 durchgeführt wird (\cite{vlfeat:online:2016}, vgl. \cref{eq:sift_deconv}), wodurch die Filtergröße -- mit ihr der benötigte Rechenaufwand -- zusätzlich reduziert wird.
 
+\todo[inline]{Hinweis auf relative Pixeldichte bei Gauss - anatomy of SIFT benennt die Standardabweichung konkreter}
+\todo[inline]{Paper ausbuddeln, das auf Probleme bei \textit{falsch} angenommener Grundglättung hinweist - ausprobieren!}
+\todo[inline]{EXIF-Daten der Handybilder speichern, um über Modelle Informationen über Grundglättung zu gewinnen}
+
 \begin{lstlisting}[style=matlab,caption={Ermittlung des $\sigma$ zur Skalenraumerstellung}, label=lst:matlab_scalespace_sigma]
 s                     = 3;
 k                     = 2^(1/s);
