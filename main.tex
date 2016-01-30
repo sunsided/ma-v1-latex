@@ -1237,7 +1237,7 @@ Pixel, die das Extremum ihrer $\SI{28}{\px}$-Umgebung sind, sind ein Merkmal in 
 \pagenumbering{Roman}
 \appendix
 
-\chapter{Builds}
+\chapter{Softwarebibliotheken}
 
 \section{MongoDB C++ Driver}
 
@@ -1245,7 +1245,7 @@ Für alle Builds kamen CMake 3.4 und Visual Studio 2015  unter Windows 10 zum Ei
 wobei für die Intel x64-Architektur kompiliert wurde.
 
 Da die CMake-Konfigurationen der folgend aufgelisteten Bibliotheken hinsichtlich der Nomenklatur der Ausgabedateien keine Unterscheidung zwischen Release- und Debugbuilds durchführen, 
-dies unter Windows jedoch bezüglich der unterschiedlichen Laufzeitumgebungen für Release- und Debugbuilds (\texttt{msvcp140.dll} und \texttt{msvcp140d.dll}) zu Problemen führen kann,
+dies unter Windows jedoch aufgrund der unterschiedlichen Laufzeitumgebungen für Release- und Debugbuilds (\texttt{msvcp140.dll} und \texttt{msvcp140d.dll}) zu Problemen führte,
 wurden separate Builds für beide Konfigurationen in unterschiedliche Zielordner ausgeführt.
 
 \todo[inline]{Docker based builds}
@@ -1266,7 +1266,32 @@ CMake-Builds dieses Stands werden fälschlicherweise als Version 1.0 ausgegeben.
 \texttt{mongo-cxx-driver} 3.0.1-rc0 wurde aus den git-Sourcen gebaut (\url{https://github.com/mongodb/mongo-cxx-driver}, commit SHA \texttt{46bad97f\-4d908cd9\-e13222cc\-3d6ba6ca\-d5625e64} vom 24. Januar 2016). 
 Der Build erfolgte gegen die obigen \texttt{libbson} und \texttt{libmongoc}, sowie Boost 1.60.0 (\url{http://www.boost.org/}, Release vom 17. Dezember 2015).
 
-\section{OpenCV 3.1}
+\section{OpenCV}
+
+Für alle Builds kamen CMake 3.4 und Visual Studio 2015  unter Windows 10 zum Einsatz,
+wobei für die Intel x64-Architektur kompiliert wurde.
+Debug- und Releasebuilds wurden wie üblich erstellt.
+
+\subsection{libopencv}
+
+OpenCV 3.1.0 wurde aus den git-Sourcen gebaut (\url{https://github.com/Itseez/opencv}, commit SHA \texttt{92387b1e\-f8fad151\-96dd5f7f\-b4931444\-a68bc93a} vom 18. Dezember 2015).
+"`Nonfree"'-Extras aus den Contributions (\cref{subsec:opencv_contrib}) für \algo{SIFT} und \algo{SURF}, sowie die Eigen-Library (\cref{subsec:eigen}) wurden manuell hinzugefügt.
+Die integrierte Unterstützung für JPEG (\texttt{libjpeg} 90), PNG  (\texttt{libjng} 1.6.19), sowie WebP (\texttt{libwebp} 0.3.1) wurde verwendet.
+Auf die Verwendendung der neueren \texttt{libwebp} 0.5.0 (Mirror unter \url{https://github.com/webmproject/libwebp}) wurde verzichtet, 
+da bei der Verarbeitung der verwendeten WebP-Bilder keine Probleme auftraten.
+
+\todo[inline]{Eigen ggf. wieder raus}
+\todo[inline]{Performance mit neuerer libwep prüfen!}
+
+\subsection{nonfree}
+\label{subsec:opencv_contrib}
+
+OpenCV Contributions 3.1.0 wurde aus den git-Sourcen gebaut (\url{https://github.com/Itseez/opencv_contrib}, commit SHA \texttt{5409d5ad\-560523c8\-5c6796cc\-5a009347\-072d883c} vom 17. Dezember 2015). 
+
+\subsection{Eigen}
+\label{subsec:eigen}
+
+Eigen 3.2.92 wurde aus mercurial-Sourcen gebaut (Mirror \url{https://github.com/RLovelett/eigen}, commit SHA \texttt{762d0471\-b2add463\-1c0c68ca\-b601a3dd\-77a11d0e} vom 27. Januar 2016).
 
 \todo[inline]{add}
 
