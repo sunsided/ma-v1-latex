@@ -1880,10 +1880,13 @@ CMake-Builds dieses Stands werden fälschlicherweise als Version 1.0 ausgegeben.
 \texttt{mongo-cxx-driver} 3.0.1-rc0 wurde aus den git-Sourcen gebaut (\url{https://github.com/mongodb/mongo-cxx-driver}, commit SHA \texttt{46bad97f\-4d908cd9\-e13222cc\-3d6ba6ca\-d5625e64} vom 24. Januar 2016). 
 Der Build erfolgte gegen die obigen \texttt{libbson} und \texttt{libmongoc}, sowie Boost 1.60.0 (\url{http://www.boost.org/}, Release vom 17. Dezember 2015).
 
+\todo[inline]{Veraltet - legacy-Treiber wurde letztlich verwendet}
+
 \section{OpenCV}
 
 Für alle Builds kamen CMake 3.4 und Visual Studio 2015  unter Windows 10 zum Einsatz,
 wobei für die Intel x64-Architektur kompiliert wurde.
+Die Features AVX, AVX3, FMA3, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, sowie die automatisch bereitgestellten Intel Integrated Performance Primitives ("`ippicv"') 9.0.1 und OpenMP wurden aktiviert.
 Debug- und Releasebuilds wurden wie üblich erstellt.
 
 \subsection{libopencv}
