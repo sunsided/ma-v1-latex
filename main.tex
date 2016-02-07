@@ -1889,6 +1889,11 @@ wobei für die Intel x64-Architektur kompiliert wurde.
 Die Features AVX, AVX3, FMA3, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2, sowie die automatisch bereitgestellten Intel Integrated Performance Primitives ("`ippicv"') 9.0.1 und OpenMP wurden aktiviert.
 Debug- und Releasebuilds wurden wie üblich erstellt.
 
+\subsection{Intel Threading Building Blocks}
+
+TBB 4.4 Update 2 wurde als vorkompilierte Binary von den offiziellen Quellen bezogen (\url{https://www.threadingbuildingblocks.org/}).
+Die Verwendung in OpenCV wurde aktiviert (\texttt{WITH\_TBB}), führte jedoch zu keiner signifikanten Verbesserung der Performance gegenüber den bereits vorhandenen Alternative OpenMP.
+
 \subsection{libopencv}
 
 OpenCV 3.1.0 wurde aus den git-Sourcen gebaut (\url{https://github.com/Itseez/opencv}, commit SHA \texttt{92387b1e\-f8fad151\-96dd5f7f\-b4931444\-a68bc93a} vom 18. Dezember 2015).
