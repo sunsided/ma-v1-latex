@@ -929,7 +929,10 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
   \item Apache Flink
 \end{itemize}
 
-Hadoop ist eine Implementierung des \algo{MapReduce}-Algorithmus zur verteilten Datenverarbeitung.
+\todo[inline]{1st bis 4th gen \url{http://de.slideshare.net/sbaltagi/overview-of-apacheflinkbyslimbaltagi/12?src=clipshare}}
+
+Hadoop ist eine Implementierung des \algo{MapReduce}-Algorithmus zur verteilten Datenverarbeitung;
+Verarbeitungen werden über die beiden Funktionen \algo{map} (Transformation der Eingänge) und \algo{reduce} (Aggregation der Zwischenergebnisse) abgebildet.
 Aus dem Big Data-Umfeld stammend ist Hadoop bietet konsequent eine spezialisierte Platform für die Batch-Verarbeitung extrem großer Datenmengen.
 Der YARN genannte Ressourcenmanager verteilt die Arbeitslast auf die vorhandenen Arbeitinstanzen.
 Die Lebenszeit eines Hadoop-Prozesses ist endlich, 
@@ -943,8 +946,8 @@ Ein Spark Streaming genanntes Interface ist in der Lage,
 Datenströme auf kleine Arbeitspakete aufzuteilen (Micro-Batching) und somit Streamverarbeitung nachzubilden.
 \todo[inline]{Spark ungeeignet für Echtzeit-Anfragen}
 
-Apache Storm ist eine Lösung zur Streaming-Verarbeitung von Daten zur
-Echtzeitverarbeitung. 
+Apache Storm ist eine Lösung zur Echtzeit-Streamingverarbeitung von Ereignissen.
+Storm definiert die Datenverarbeitung in Form von \algo{spouts} (Datenquellen) und \algo{bolts} (Datenprozessoren) als gerichteten, azyklischen Graphen.
 Eine Trident genannte High Level-API sammelt die eingehenden Daten zu Batches (Micro-Batching analog Spark Streaming) und erlaubt die Komposition von MapReduce-artigen Verarbeitungsgraphen.
 Spark verwendet für das Clustermanagement Apache ZooKeeper und funktioniert
 prinzipiell zustandsfrei, wodurch das Erholen von Systemausfällen trivial ist.
@@ -952,6 +955,10 @@ Für zustandsbehaftete Verarbeitung können Transaktionen und States definiert w
 Die DRPC genannte Schnittstelle für (distributed) remote procedure calls erlaubt das Abfragen des internen States oder das Starten eines Verarbeitungsgraphen "on demand".
 
 \todo[inline]{Apache Flink, \url{http://stackoverflow.com/questions/28082581/what-is-the-differences-between-apache-spark-and-apache-flink}}
+\todo[inline]{Zyklische und iterative Datenflüsse}
+Apache Flink bietet Unterstützung für Batch und echte Streamingverarbeitung (d.h. kein Micro-Batching) und erlaubt die Definition von zyklischen Graphen,
+sowie iterativen Prozessen.
+Flink kann sowohl standalone, als auch mittels des YARN-Ressourcenmanagers betrieben werden; für high availability-Zwecke wird in der standalone-Umgebung Apache ZooKeeper verwendet.
 
 \chapter{Übersicht der Literatur}
 
