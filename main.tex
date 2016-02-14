@@ -918,6 +918,41 @@ Für einen $3 \times 3$-Filterkern ergibt sich eine Beschleunigung um Faktor $1.
 \todo[inline]{Intuitive Erklärung für zentralen Differenzenquotienten}
 \todo[inline]{Sample und Plots für gefilterte Daten}
 
+\chapter{Implementierung}
+
+\todo[inline]{Wahl der Platform}
+
+\begin{itemize}
+  \item Apache Hadoop
+  \item Apache Spark
+  \item Apache Storm
+  \item Apache Flink
+\end{itemize}
+
+Hadoop ist eine Implementierung des \algo{MapReduce}-Algorithmus zur verteilten Datenverarbeitung.
+Aus dem Big Data-Umfeld stammend ist Hadoop bietet konsequent eine spezialisierte Platform für die Batch-Verarbeitung extrem großer Datenmengen.
+Der YARN genannte Ressourcenmanager verteilt die Arbeitslast auf die vorhandenen Arbeitinstanzen.
+Die Lebenszeit eines Hadoop-Prozesses ist endlich, 
+Prozesse werden immer explizit gestartet und terminieren nach der Verarbeitung des Datensatzes.
+Der Datenaustausch zwischen Mappern und Reducern, 
+sowie dem Initiator der Verarbeitung erfolgt ausschließlich über das HDFS-Clusterdateisystem, 
+wodurch Hadoop für sehr schnellebige Prozesse ungeeignet wird.
+
+Apache Spark baut auf den Prinzipien von Hadoop auf, spezialisiert sich aber auf die In-Memory-Verarbeitung von Daten und erreicht somit eine höhere Verarbeitungsgeschwindigkeit.
+Ein Spark Streaming genanntes Interface ist in der Lage,
+Datenströme auf kleine Arbeitspakete aufzuteilen (Micro-Batching) und somit Streamverarbeitung nachzubilden.
+\todo[inline]{Spark ungeeignet für Echtzeit-Anfragen}
+
+Apache Storm ist eine Lösung zur Streaming-Verarbeitung von Daten zur
+Echtzeitverarbeitung. 
+Eine Trident genannte High Level-API sammelt die eingehenden Daten zu Batches (Micro-Batching analog Spark Streaming) und erlaubt die Komposition von MapReduce-artigen Verarbeitungsgraphen.
+Spark verwendet für das Clustermanagement Apache ZooKeeper und funktioniert
+prinzipiell zustandsfrei, wodurch das Erholen von Systemausfällen trivial ist.
+Für zustandsbehaftete Verarbeitung können Transaktionen und States definiert werden.
+Die DRPC genannte Schnittstelle für (distributed) remote procedure calls erlaubt das Abfragen des internen States oder das Starten eines Verarbeitungsgraphen "on demand".
+
+\todo[inline]{Apache Flink}
+
 \chapter{Übersicht der Literatur}
 
 \cite{orb} beschreiben einen neuen binären Deskriptor genannt \algo{ORB}, der auf \algo{BRIEF} basiert, jedoch um Rotationsinvarianz und Rauschresistenz erweitert wurde. \algo{ORB} ist (bei vergleichbarer Performance) um zwei Magnituden schneller als \acro{SIFT}. Unterstellt dabei, dass \algo{SURF} besser ist als \algo{SIFT}; liefert Quelle für \algo{SURF}.
